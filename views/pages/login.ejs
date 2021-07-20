@@ -1,7 +1,27 @@
 <!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <%- include('../partials/head'); %>
+  </head>
   <body>
-    login
+    <% if(typeof message === "string"){ %>
+    <script type="text/javascript">
+      alert("<%- message %>");
+    </script>
+    <% } %>
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Log in", lang)%></h1>
+      <hr class="h1Line" />
+      <form action="/login" method="post">
+        <% if(typeof usernamefield === "string"){ %>
+        <input type="text" value="<%- usernamefield %>" name="username" required />
+        <% }else{ %> <input type="text" placeholder="<%= langFunc.translate("Enter Username", lang)%>" name="username"
+        required /> <% } %> <input type="password" placeholder="<%= langFunc.translate("Enter Password", lang)%>"
+        name="password" required />
+        <button type="submit"><%= langFunc.translate("Log in", lang)%></button>
+      </form>
+      <hr />
+      <a href="/register" class="linkbutton"><%= langFunc.translate("Register", lang)%></a>
+    </div>
   </body>
 </html>

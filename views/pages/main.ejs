@@ -1,7 +1,60 @@
 <!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <script type="text/javascript" src="/js/main.js"></script>
+    <%- include('../partials/head'); %>
+  </head>
   <body>
-    main
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Main", lang) %></h1>
+      <hr class="h1Line" />
+      <a href="/rules/rules_<%- lang %>.pdf" class="linkbutton"><%= langFunc.translate("Rules", lang) %></a>
+      <a href="/challenge" class="linkbutton"><%= langFunc.translate("Challange players", lang) %></a>
+      <form action="/choseColor" method="post">
+        <div class="pairOfElements">
+          <div class="firstOfPair">
+            <select size="5" name="challengerName" id="challengerName" onchange="setSelect(this.selectedIndex)">
+              <% for (const [key, value] of Object.entries(challengers)) { %>
+              <option><%= value %></option>
+              <% } %>
+            </select>
+            <select
+              name="challengerID"
+              id="challengerID"
+              onchange="setSelect(this.selectedIndex)"
+              required
+              style="display: none"
+            >
+              <% for (const [key, value] of Object.entries(challengers)) { %>
+              <option><%= key %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="secondOfPair">
+            <button type="submit"><%= langFunc.translate("Accept challange", lang) %></button>
+          </div>
+        </div>
+      </form>
+      <div class="pairOfElements">
+        <div class="firstOfPair">
+          <select size="5" name="oponentName" id="oponentName" onchange="setSelect2(this.selectedIndex)">
+            <% for (const [key, value] of Object.entries(currentMatches)) { %>
+            <option><%= value %></option>
+            <% } %>
+          </select>
+          <select name="matchID" id="matchID" onchange="setSelect2(this.selectedIndex)" required style="display: none">
+            <% for (const [key, value] of Object.entries(currentMatches)) { %>
+            <option><%= key %></option>
+            <% } %>
+          </select>
+        </div>
+        <div class="secondOfPair">
+          <button type="button" id="goToGame" onclick="btnGoToGame()">
+            <%= langFunc.translate("Go to game", lang) %>
+          </button>
+        </div>
+      </div>
+      <a href="/changelog" target="_blank" id="changelogLink">v 1.05</a>
+    </div>
   </body>
 </html>

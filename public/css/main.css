@@ -1,0 +1,291 @@
+/*General settings*/
+body {
+  background-color: #f5f5f5;
+  height: 100%;
+  margin: 0;
+}
+
+label {
+  color: black;
+  font-size: 20px;
+}
+
+h1 {
+  color: #404a88;
+  text-align: center;
+  font-size: 30px;
+  margin: 2px;
+}
+
+input {
+  width: 300px;
+  color: black;
+  font-size: 20px;
+  margin: 10px 20px;
+}
+
+button {
+  height: 30px;
+  width: 300px;
+  font-size: 14px;
+  margin: 10px 20px;
+  background-image: linear-gradient(#376b90, #1e4b70);
+  color: white;
+}
+
+button:hover {
+  background-image: linear-gradient(#4586b2, #286596);
+  cursor: pointer;
+}
+
+select {
+  margin: 10px 20px;
+}
+
+hr {
+  margin-top: 30px;
+  margin-bottom: 30px;
+  border-top: 1px dotted grey;
+  width: 100%;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/*Class settings*/
+.linkbutton {
+  height: 30px;
+  line-height: 30px;
+  width: 300px;
+  font-size: 14px;
+  font-family: "arial";
+  margin: 10px 20px;
+  background-image: linear-gradient(#376b90, #1e4b70);
+  color: white;
+  text-decoration: none;
+  text-align: center;
+  border-top: 2px solid #767676;
+  border-right: 2px solid #212121;
+  border-bottom: 2px solid #212121;
+  border-left: 2px solid #767676;
+}
+
+.linkbutton:hover {
+  background-image: linear-gradient(#4586b2, #286596);
+  cursor: pointer;
+}
+
+.contentDiv {
+  width: 949px;
+  margin: auto;
+  margin-top: 20px;
+  padding-top: 0px;
+  padding-bottom: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+  background-color: white;
+  box-shadow: 0px 0px 10px 3px #cccccc;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.h1Line {
+  margin-top: 0px;
+  margin-bottom: 10px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  justify-content: left;
+}
+
+.pairOfElements {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+
+.firstOfPair {
+  width: 50%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+.secondOfPair {
+  width: 50%;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+}
+
+.bottomAlignedColumn {
+  display: flex;
+  height: 570px;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.bottomAlignedColumn * {
+  margin-top: 10px;
+  margin-bottom: 0px;
+  text-align: center;
+}
+
+.leftAlignedRow {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  margin-top: 10px;
+  margin-bottom: 0px;
+  margin-left: 20px;
+}
+
+.leftAlignedRow * {
+  text-align: left;
+  margin: 0px;
+  margin-right: 10px;
+}
+
+select.listWithSingleHighlight {
+  background-color: #ffff00;
+}
+
+select.listWithHighlights option.highlighted {
+  background-color: #ffff00;
+}
+
+.langButtonForm {
+  width: 86px;
+  height: 54px;
+}
+
+/*Element specific settings*/
+/*Top board*/
+#topPanel {
+  background-color: #dac558;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#topCenterPanel {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 989px;
+  margin: auto;
+}
+
+#goIconText {
+  border: none;
+  background-color: #dac558;
+  color: #ffffff;
+  height: 46px;
+  line-height: 46px;
+  font-size: 30px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-right: 0px;
+  margin-left: 4px;
+  font-family: "arial";
+  text-decoration: none;
+  text-align: center;
+}
+
+#goIconDiv {
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+  padding: 0px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  margin-right: auto;
+  margin-left: 0px;
+}
+
+#enLangButton {
+  background: url(../Graphics/ukFlag64x32.png) no-repeat;
+  border: 1px solid #000000;
+  width: 66px;
+  height: 34px;
+  margin: 10px 10px;
+}
+
+#chLangButton {
+  background: url(../Graphics/chFlag64x32.png) no-repeat;
+  border: 1px solid #000000;
+  width: 66px;
+  height: 34px;
+  margin: 10px 10px;
+}
+
+/*Board.php*/
+#canvasDiv {
+  position: relative;
+  display: inline-block;
+  float: left;
+}
+
+#canvasMessageDiv {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  border: 3px solid green;
+  background: lightYellow;
+  padding: 5px 5px;
+  left: 285px;
+  top: 285px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  display: none;
+}
+
+#canvasButtonsDiv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#canvasButtonsDiv * {
+  width: auto;
+  margin: 5px;
+  display: none;
+}
+
+#canvasLabel {
+  text-align: center;
+  font-size: 18px;
+}
+
+#yourTurnDiv {
+  margin-left: 20px;
+  margin-right: 20px;
+  margin-bottom: 10px;
+  margin-top: 0px;
+  background-color: #00ff00;
+  width: 300px;
+  height: 100px;
+  line-height: 100px;
+  border: 2px dashed #f69c55;
+}
+
+#yourTurn {
+  font-size: 40px;
+}
+
+/*Main.php*/
+#changelogLink {
+  margin-left: auto;
+  margin-right: 0px;
+}

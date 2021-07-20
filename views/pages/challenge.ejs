@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="/js/challenge.js"></script>
+    <%- include('../partials/head'); %>
+  </head>
+  <body>
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Challenge players", lang)%></h1>
+      <hr class="h1Line" />
+      <a href="/main" class="linkbutton"><%= langFunc.translate("Main", lang) %></a>
+      <form action="/challenge" method="post">
+        <div class="pairOfElements">
+          <div class="firstOfPair"><input type="text" id="filterString" name="filterString" /></div>
+          <div class="secondOfPair">
+            <button type="submit"><%= langFunc.translate("Filter", lang) %></button>
+          </div>
+        </div>
+      </form>
+      <form action="/challenge" method="post">
+        <div class="pairOfElements">
+          <div class="firstOfPair">
+            <select size="5" name="challengedName" id="challengedName" onchange="setSelect(this.selectedIndex)">
+              <% for (const [key, value] of Object.entries(challengeblePlayers)) { %>
+              <option><%= value %></option>
+              <% } %>
+            </select>
+            <select
+              name="challengedID"
+              id="challengedID"
+              onchange="setSelect(this.selectedIndex)"
+              required
+              style="display: none"
+            >
+              <% for (const [key, value] of Object.entries(challengeblePlayers)) { %>
+              <option><%= key %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="secondOfPair">
+            <button type="submit"><%= langFunc.translate("Challenge", lang) %></button>
+          </div>
+        </div>
+      </form>
+      <hr />
+      <form action="/challenge" method="post">
+        <div class="pairOfElements">
+          <div class="firstOfPair">
+            <select size="5" name="alreadyChallenged" id="alreadyChallenged" onchange="setSelect2(this.selectedIndex)">
+              <% for (const [key, value] of Object.entries(challengedPlayers)) { %>
+              <option><%= value %></option>
+              <% } %>
+            </select>
+            <select
+              name="alreadyChallengedID"
+              id="alreadyChallengedID"
+              onchange="setSelect2(this.selectedIndex)"
+              required
+              style="display: none"
+            >
+              <% for (const [key, value] of Object.entries(challengedPlayers)) { %>
+              <option><%= key %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="secondOfPair">
+            <button type="submit"><%= langFunc.translate("Remove challange", lang) %></button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </body>
+</html>

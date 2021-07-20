@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <%- include('../partials/head'); %>
+  </head>
+  <body>
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Chose color", lang)%></h1>
+      <hr class="h1Line" />
+      <form action="/choseColor" method="post">
+        <input name="challengerID" id="challengerID" value="<%- challengerID %>" style="display: none" />
+        <button type="submit" name="black" value="1"><%= langFunc.translate("Black", lang)%></button>
+        <button type="submit" name="white" value="1"><%= langFunc.translate("White", lang)%></button>
+      </form>
+    </div>
+  </body>
+</html>

@@ -1,7 +1,34 @@
-<!DOCTYPE html>
-<html>
-  <head> </head>
-  <body>
-    head
-  </body>
-</html>
+<link rel="stylesheet" type="text/css" href="../css/main.css" />
+<title>Go</title>
+<div id="topPanel">
+  <div id="topCenterPanel">
+    <div id="goIconDiv">
+      <a href="/main">
+        <img src="/graphics/goIcon46x46.png" />
+      </a>
+      <a href="/main" id="goIconText"><%= langFunc.translate("Go", lang)%></a>
+    </div>
+    <form action="/changeLanguage" method="post" class="langButtonForm">
+      <input type="hidden" id="currentUrl" name="currentUrl" value="" />
+      <input type="hidden" name="language" value="EN" />
+      <button id="enLangButton" type="submit"></button>
+    </form>
+    <form action="/changeLanguage" method="post" class="langButtonForm">
+      <input type="hidden" id="currentUrl2" name="currentUrl" value="" />
+      <input type="hidden" name="language" value="CH" />
+      <button id="chLangButton" type="submit"></button>
+      <script type="text/javascript">
+        document.getElementById("currentUrl").value = window.location.href;
+        document.getElementById("currentUrl2").value = window.location.href;
+      </script>
+    </form>
+    <% if(typeof username === "string" && username != null && username != ""){ %>
+    <div class="column">
+      <a href="/profile"><%= username %></a>
+      <a href="/logout"><%= langFunc.translate("Log out", lang)%></a>
+    </div>
+    <% }else{ %>
+    <a href="/login"><%= langFunc.translate("Log in", lang)%></a>
+    <% } %>
+  </div>
+</div>

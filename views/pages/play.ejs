@@ -1,7 +1,57 @@
 <!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+    <script type="text/javascript" src="/js/play.js"></script>
+    <%- include('../partials/head'); %>
+  </head>
   <body>
-    play
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Board", lang) %></h1>
+      <hr class="h1Line" style="display: none" />
+      <div>
+        <div id="canvasDiv">
+          <canvas width="570" height="570" id="goCanvas" style="border: 1px solid #000000"></canvas>
+          <div id="canvasMessageDiv">
+            <label id="canvasLabel"></label>
+            <div id="canvasButtonsDiv">
+              <button onclick="btnYes()" id="canvasYesButton"><?php dict("Yes")?></button>
+              <button onclick="btnNo()" id="canvasNoButton"><?php dict("No")?></button>
+              <button onclick="btnOk()" id="canvasOkButton"><?php dict("Ok")?></button>
+            </div>
+          </div>
+        </div>
+        <div class="bottomAlignedColumn">
+          <div id="yourTurnDiv">
+            <label id="yourTurn"></label>
+          </div>
+          <div class="leftAlignedRow">
+            <canvas width="30" height="30" id="blackStone"></canvas>
+            <label id="blackName"><?php echo getNameFromMatchID($_REQUEST["id"], 0); ?></label>
+            <img id="blackArrow" src="../Graphics/arrow40x30.png" alt="arrow" />
+            <label id="blackScore"></label>
+          </div>
+          <div class="leftAlignedRow">
+            <canvas width="30" height="30" id="whiteStone"></canvas>
+            <label id="whiteName"><?php echo getNameFromMatchID($_REQUEST["id"], 1); ?></label>
+            <img id="whiteArrow" src="../Graphics/arrow40x30.png" alt="arrow" />
+            <label id="whiteScore"></label>
+          </div>
+          <button onclick="btnPreviewScore()"><?php dict("Preview score")?></button>
+          <button onclick="btnGiveUp()" id="btnGiveUp"><?php dict("Give up")?></button>
+          <button onclick="btnPass()" id="btnPass"><?php dict("Pass")?></button>
+          <button onclick="btnExecute()" id="btnExecute"><?php dict("Confirm")?></button>
+        </div>
+      </div>
+      <label style="clear: left; display: block" id="dbg"></label>
+      <script>
+        yourTurnText = "<%- langFunc.translate("Your turn", lang) %>";
+        notYourTurnText = "<%- langFunc.translate("Not your turn", lang) %>";
+        selectLocationText = "<<%- langFunc.translate("Select location", lang) %>";
+        areYouSureYouWantToGiveUpText = "<%- langFunc.translate("Are you sure you want to give up?", lang) %>";
+        dbgfunc();
+      </script>
+      <button type="button" id="sendMessage" onclick="sendMessage()">Send message</button>
+    </div>
   </body>
 </html>
