@@ -5,7 +5,6 @@ const PORT = 5000;
 
 const server = express()
   .use(express.static(path.join(__dirname, "public")))
-  .use(express.urlencoded())
   .set("views", path.join(__dirname, "views"))
   .set("view engine", "ejs")
   .get("/*", httpGet)
@@ -19,9 +18,6 @@ async function httpGet(req, res) {
   switch (req.url) {
     case "/importTest":
       await res.render("pages/importTest");
-      break;
-    default:
-      console.log(req.url);
       break;
   }
 }

@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.getUserId = exports.getUsernames = exports.getUserName = exports.isLoggedIn = exports.createAccount = exports.logout = exports.login = void 0;
 var Pool = require("pg").Pool;
 var yn = require("yn");
@@ -53,7 +53,7 @@ function login(username, password, session) {
                     _a.trys.push([1, 5, , 6]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -102,7 +102,7 @@ function createAccount(username, password, password2) {
                     _a.trys.push([2, 6, , 7]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 3:
@@ -138,19 +138,19 @@ function checkNewCredentials(username, password, password2) {
                     if (!usernameRegex.test(username))
                         return [2 /*return*/, {
                                 result: false,
-                                message: "Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long"
+                                message: "Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long",
                             }];
                     if (!passwordRegex.test(password))
                         return [2 /*return*/, {
                                 result: false,
-                                message: "Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long"
+                                message: "Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long",
                             }];
                     _a.label = 1;
                 case 1:
                     _a.trys.push([1, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -163,7 +163,7 @@ function checkNewCredentials(username, password, password2) {
                         return [2 /*return*/, { result: false, message: "Username taken" }];
                     return [2 /*return*/, {
                             result: true,
-                            message: "Credentials ok"
+                            message: "Credentials ok",
                         }];
                 case 4:
                     err_3 = _a.sent();
@@ -195,7 +195,7 @@ function getUserName(session) {
                     _a.trys.push([1, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -226,7 +226,7 @@ function getUsernames(userIds) {
                     _b.trys.push([0, 3, , 4]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 1:

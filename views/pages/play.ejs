@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
-    <script type="text/javascript" src="/js/play.js"></script>
+    <!--<script data-main="js/play" type="text/javascript" src="/external/require.js"></script>-->
     <%- include('../partials/head'); %>
   </head>
   <body>
@@ -49,9 +48,9 @@
         notYourTurnText = "<%- langFunc.translate("Not your turn", lang) %>";
         selectLocationText = "<<%- langFunc.translate("Select location", lang) %>";
         areYouSureYouWantToGiveUpText = "<%- langFunc.translate("Are you sure you want to give up?", lang) %>";
-        dbgfunc();
       </script>
       <button type="button" id="sendMessage" onclick="sendMessage()">Send message</button>
+      <script type="text/javascript" src="/js/play.js""></script>
     </div>
   </body>
 </html>

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "amd",
+    "moduleResolution": "node",
+    "baseUrl": "./",
+    "paths": {
+      "socket.io-client": ["bubba/index"]
+    }
+  },
+  "files": ["js/importTest.ts"]
+}

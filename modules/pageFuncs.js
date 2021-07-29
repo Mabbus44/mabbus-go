@@ -35,7 +35,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.acceptChallange = exports.unChallengePlayer = exports.challengePlayer = exports.getCurrentMatches = exports.getChallengeblePlayers = exports.getChallengedPlayers = exports.getChallengers = void 0;
 var Pool = require("pg").Pool;
 var yn = require("yn");
@@ -49,7 +49,7 @@ function getChallengers(userId) {
                     _b.trys.push([0, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 1:
@@ -89,7 +89,7 @@ function getChallengedPlayers(userId) {
                     _b.trys.push([0, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 1:
@@ -136,7 +136,7 @@ function getChallengeblePlayers(userId) {
                     _b.trys.push([1, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -171,7 +171,7 @@ function getCurrentMatches(userId) {
                     _b.trys.push([0, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 1:
@@ -224,7 +224,7 @@ function challengePlayer(userId, challengeId) {
                     _a.trys.push([1, 5, , 6]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -266,7 +266,7 @@ function unChallengePlayer(userId, challengerId) {
                     _a.trys.push([1, 4, , 5]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:
@@ -300,7 +300,7 @@ function acceptChallange(userId, challengerId, color) {
                     _a.trys.push([1, 5, , 6]);
                     pool = new Pool({
                         connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL)
+                        ssl: yn(process.env.DATABASE_SSL),
                     });
                     return [4 /*yield*/, pool.connect()];
                 case 2:

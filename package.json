@@ -7,7 +7,6 @@
     "node": "14.16.x"
   },
   "dependencies": {
-    "@types/socket.io-client": "^3.0.0",
     "bcrypt": "^5.0.1",
     "ejs": "^3.1.6",
     "express": "^4.17.1",
@@ -16,7 +15,9 @@
     "socket.io": "^4.0.1",
     "yn": "^4.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jspm": "^0.16.55"
+  },
   "scripts": {
     "start": "node index.js"
   },
@@ -30,5 +31,13 @@
   "bugs": {
     "url": "https://github.com/Mabbus44/mabbus-go/issues"
   },
-  "homepage": "https://github.com/Mabbus44/mabbus-go#readme"
+  "homepage": "https://github.com/Mabbus44/mabbus-go#readme",
+  "jspm": {
+    "dependencies": {
+      "jq": "npm:jquery@^3.6.0"
+    },
+    "devDependencies": {
+      "typescript": "npm:typescript@^2.0.7"
+    }
+  }
 }

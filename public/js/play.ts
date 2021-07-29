@@ -1,12 +1,8 @@
-function dbgfunc(): void {
-  let lblDbg = document.getElementById("dbg") as HTMLLabelElement;
-  lblDbg.innerHTML = "itWorks";
-}
+//import { io } from "socket.io-client";
+import * as testLib from "./testLib";
 
-function uppdateDebug(dbgText) {
-  let lblDbg = document.getElementById("dbg");
-  lblDbg.innerHTML = dbgText;
-}
-
-//var socket = io() as HTMLLabelElement
-//socket.on("dbg", uppdateDebug);
+//var socket = io();
+//socket.on("dbg", (msg) => {
+//  document.getElementById("dbg").innerHTML = msg;
+//});
+document.getElementById("dbg").innerHTML = testLib.myAdd(2, 3);

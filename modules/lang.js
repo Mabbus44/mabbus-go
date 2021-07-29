@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.translate = exports.changeLanguage = void 0;
 var fs = require("fs");
 var languageEN = loadLanguage("EN");
