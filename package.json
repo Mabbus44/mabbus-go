@@ -2,7 +2,7 @@
   "name": "mabbus-go",
   "version": "1.0.0",
   "description": "Play the board game GO",
-  "main": "index.js",
+  "main": "js/server/index.js",
   "engines": {
     "node": "14.16.x"
   },
@@ -13,13 +13,12 @@
     "express-session": "^1.17.2",
     "pg": "^8.5.1",
     "socket.io": "^4.0.1",
-    "yn": "^4.0.0"
-  },
-  "devDependencies": {
-    "jspm": "^0.16.55"
+    "socket.io-client": "^4.1.3",
+    "yn": "^4.0.0",
+    "browserify": "^17.0.0"
   },
   "scripts": {
-    "start": "node index.js"
+    "start": "node js/server/index.js"
   },
   "repository": {
     "type": "git",
@@ -31,13 +30,5 @@
   "bugs": {
     "url": "https://github.com/Mabbus44/mabbus-go/issues"
   },
-  "homepage": "https://github.com/Mabbus44/mabbus-go#readme",
-  "jspm": {
-    "dependencies": {
-      "jq": "npm:jquery@^3.6.0"
-    },
-    "devDependencies": {
-      "typescript": "npm:typescript@^2.0.7"
-    }
-  }
+  "homepage": "https://github.com/Mabbus44/mabbus-go#readme"
 }

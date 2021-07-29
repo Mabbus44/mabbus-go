@@ -1,6 +1,6 @@
-import * as auth from "./modules/auth";
-import * as lang from "./modules/lang";
-import * as pageFuncs from "./modules/pageFuncs";
+import * as auth from "./auth";
+import * as lang from "./lang";
+import * as pageFuncs from "./pageFuncs";
 import * as express from "express";
 import { Server } from "socket.io";
 import * as path from "path";
@@ -8,10 +8,10 @@ import * as session from "express-session";
 const PORT = process.env.PORT;
 
 const server = express()
-  .use(express.static(path.join(__dirname, "public")))
+  .use(express.static(path.join(__dirname, "../../public")))
   .use(express.urlencoded())
   .use(session({ secret: "psfjigomisodfjnsiojfn", saveUninitialized: true, resave: true }))
-  .set("views", path.join(__dirname, "views"))
+  .set("views", path.join(__dirname, "../../views"))
   .set("view engine", "ejs")
   .get("/*", httpGet)
   .post("/*", httpPost)
@@ -31,9 +31,6 @@ async function httpGet(req, res) {
   let adress = splittedURL[0];
   let args = splittedURL[1];
   switch (adress) {
-    case "/importTest":
-      await render("pages/importTest", req, res);
-      break;
     case "/challenge":
       await render("pages/challenge", req, res, {
         challengeblePlayers: await pageFuncs.getChallengeblePlayers(auth.getUserId(req.session)),

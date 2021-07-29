@@ -1,8 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES5",
-    "baseUrl": "./",
     "module": "commonjs"
   },
-  "files": ["index.ts"]
+  "include": ["*"]
 }
