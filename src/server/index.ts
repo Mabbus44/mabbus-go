@@ -1,64 +1,65 @@
-import * as auth from "./auth";
+import * as uh from "./userHandling";
 import * as lang from "./lang";
 import * as pageFuncs from "./pageFuncs";
 import * as express from "express";
-import { Server } from "socket.io";
 import * as path from "path";
 import * as session from "express-session";
-const PORT = process.env.PORT;
+import * as socketHandle from "./socketHandling";
 
+const PORT = process.env.PORT;
+const sessionMiddleware = session({ secret: "psfjigomisodfjnsiojfn", saveUninitialized: true, resave: true });
 const server = express()
   .use(express.static(path.join(__dirname, "../../public")))
   .use(express.urlencoded())
-  .use(session({ secret: "psfjigomisodfjnsiojfn", saveUninitialized: true, resave: true }))
+  .use(sessionMiddleware)
   .set("views", path.join(__dirname, "../../views"))
   .set("view engine", "ejs")
   .get("/*", httpGet)
   .post("/*", httpPost)
   .listen(PORT, () => console.log(`Listening on ${PORT}`));
-
-const io = new Server(server);
-io.on("connection", (socket) => {
-  console.log(`Client connected ${socket.id}`);
-  socket.on("disconnect", () => console.log(`Client disconnected ${socket.id}`));
-  socket.on("newMessage", (message) => console.log(message));
-});
-
-setInterval(() => io.emit("dbg", "yep"), 5000);
+socketHandle.initSockets(server, sessionMiddleware);
 
 async function httpGet(req, res) {
   let splittedURL: string[] = req.url.split("?", 2);
-  let adress = splittedURL[0];
-  let args = splittedURL[1];
+  let adress: string = splittedURL[0];
+  let args: string = typeof splittedURL[1] === "string" ? splittedURL[1] : "";
   switch (adress) {
     case "/challenge":
       await render("pages/challenge", req, res, {
-        challengeblePlayers: await pageFuncs.getChallengeblePlayers(auth.getUserId(req.session)),
-        challengedPlayers: await pageFuncs.getChallengedPlayers(auth.getUserId(req.session)),
+        challengeblePlayers: await pageFuncs.getChallengeblePlayers(uh.getUserId(req.session)),
+        challengedPlayers: await pageFuncs.getChallengedPlayers(uh.getUserId(req.session)),
       });
       break;
     case "/main":
       await render("pages/main", req, res, {
-        challengers: await pageFuncs.getChallengers(auth.getUserId(req.session)),
-        currentMatches: await pageFuncs.getCurrentMatches(auth.getUserId(req.session)),
+        challengers: await pageFuncs.getChallengers(uh.getUserId(req.session)),
+        currentMatches: await pageFuncs.getCurrentMatches(uh.getUserId(req.session)),
       });
       break;
     case "/play":
-      await render("pages/play", req, res);
+      let playerIds: number[] = await uh.getPlayerIds(+getArg(args, "id"));
+      let playerColor: number = uh.getUserColorFromList(playerIds, uh.getUserId(req.session));
+      let playerNames: string[] = await uh.getUsernames(playerIds);
+      if (playerNames.length !== 2) playerNames = ["", ""];
+      await render("pages/play", req, res, {
+        player1Name: playerNames[0],
+        player2Name: playerNames[1],
+        playerColor: playerColor,
+      });
       break;
     case "/profile":
       await render("pages/profile", req, res);
       break;
     case "/register":
-      if (auth.isLoggedIn(req.session)) res.redirect("/main");
+      if (uh.isLoggedIn(req.session)) res.redirect("/main");
       else await render("pages/register", req, res);
       break;
     case "/logout":
-      auth.logout(req.session);
+      uh.logout(req.session);
       res.redirect("/login");
       break;
     case "/login":
-      if (auth.isLoggedIn(req.session)) res.redirect("/main");
+      if (uh.isLoggedIn(req.session)) res.redirect("/main");
       else await render("pages/login", req, res);
       break;
     default:
@@ -74,7 +75,7 @@ async function httpPost(req, res) {
   switch (adress) {
     case "/login":
       if (typeof req.body.username === "string" && typeof req.body.password === "string") {
-        const result = await auth.login(req.body.username, req.body.password, req.session);
+        const result = await uh.login(req.body.username, req.body.password, req.session);
         if (result.result) res.redirect("/main");
         else await render("pages/login", req, res, { usernamefield: req.body.username, message: result.message });
       } else await render("pages/login", req, res);
@@ -85,7 +86,7 @@ async function httpPost(req, res) {
         typeof req.body.password === "string" &&
         typeof req.body.password2 === "string"
       ) {
-        const result = await auth.createAccount(req.body.username, req.body.password, req.body.password2);
+        const result = await uh.createAccount(req.body.username, req.body.password, req.body.password2);
         if (!result.result) {
           await render("pages/register", req, res, { usernameField: req.body.username, message: result.message });
           return;
@@ -101,9 +102,9 @@ async function httpPost(req, res) {
       break;
     case "/challenge":
       if (typeof req.body.challengedID === "string") {
-        await pageFuncs.challengePlayer(auth.getUserId(req.session), +req.body.challengedID);
+        await pageFuncs.challengePlayer(uh.getUserId(req.session), +req.body.challengedID);
       } else if (typeof req.body.alreadyChallengedID === "string") {
-        await pageFuncs.unChallengePlayer(auth.getUserId(req.session), +req.body.alreadyChallengedID);
+        await pageFuncs.unChallengePlayer(uh.getUserId(req.session), +req.body.alreadyChallengedID);
       }
       res.redirect("/challenge");
       break;
@@ -114,11 +115,11 @@ async function httpPost(req, res) {
         !isNaN(+req.body.challengerID)
       ) {
         if (typeof req.body.black === "string" || typeof req.body.white === "string") {
-          let matchID: number;
+          let matchId: number;
           if (typeof req.body.black === "string")
-            matchID = await pageFuncs.acceptChallange(auth.getUserId(req.session), +req.body.challengerID, 0);
-          else matchID = await pageFuncs.acceptChallange(auth.getUserId(req.session), +req.body.challengerID, 1);
-          await res.redirect(`pages/play?id=${matchID}`, req, res);
+            matchId = await pageFuncs.acceptChallange(uh.getUserId(req.session), +req.body.challengerID, 0);
+          else matchId = await pageFuncs.acceptChallange(uh.getUserId(req.session), +req.body.challengerID, 1);
+          await res.redirect(`pages/play?id=${matchId}`, req, res);
         } else {
           await render("pages/choseColor", req, res, { challengerID: +req.body.challengerID });
         }
@@ -131,11 +132,17 @@ async function httpPost(req, res) {
 }
 
 async function render(page: string, req: any, res: any, extraParam = {}): Promise<void> {
-  const username = await auth.getUserName(req.session);
+  const username = await uh.getUserName(req.session);
   await res.render(page, {
     username: username,
     langFunc: lang,
     lang: typeof req.session.language === "string" ? req.session.language : "EN",
     ...extraParam,
   });
+}
+
+function getArg(argsString: string, arg: string): string {
+  let argsSplit: string[] = argsString.split(/[=&]+/);
+  for (let i: number = 0; i < argsSplit.length; i += 2) if (argsSplit[i] === arg) return argsSplit[i + 1];
+  return "";
 }

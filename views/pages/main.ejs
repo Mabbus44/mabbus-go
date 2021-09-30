@@ -13,7 +13,12 @@
       <form action="/choseColor" method="post">
         <div class="pairOfElements">
           <div class="firstOfPair">
-            <select size="5" name="challengerName" id="challengerName" onchange="setSelect(this.selectedIndex)">
+            <select
+              size="5"
+              name="challengerName"
+              id="challengerName"
+              onchange="mymodule.setSelect(this.selectedIndex)"
+            >
               <% for (const [key, value] of Object.entries(challengers)) { %>
               <option><%= value %></option>
               <% } %>
@@ -21,7 +26,7 @@
             <select
               name="challengerID"
               id="challengerID"
-              onchange="setSelect(this.selectedIndex)"
+              onchange="mymodule.setSelect(this.selectedIndex)"
               required
               style="display: none"
             >
@@ -37,19 +42,25 @@
       </form>
       <div class="pairOfElements">
         <div class="firstOfPair">
-          <select size="5" name="oponentName" id="oponentName" onchange="setSelect2(this.selectedIndex)">
+          <select size="5" name="oponentName" id="oponentName" onchange="mymodule.setSelect2(this.selectedIndex)">
             <% for (const [key, value] of Object.entries(currentMatches)) { %>
             <option><%= value %></option>
             <% } %>
           </select>
-          <select name="matchID" id="matchID" onchange="setSelect2(this.selectedIndex)" required style="display: none">
+          <select
+            name="matchId"
+            id="matchId"
+            onchange="mymodule.setSelect2(this.selectedIndex)"
+            required
+            style="display: none"
+          >
             <% for (const [key, value] of Object.entries(currentMatches)) { %>
             <option><%= key %></option>
             <% } %>
           </select>
         </div>
         <div class="secondOfPair">
-          <button type="button" id="goToGame" onclick="btnGoToGame()">
+          <button type="button" id="goToGame" onclick="mymodule.btnGoToGame()">
             <%= langFunc.translate("Go to game", lang) %>
           </button>
         </div>

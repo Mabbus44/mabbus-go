@@ -20,12 +20,16 @@ function changeLanguage(session, language) {
     return true;
 }
 exports.changeLanguage = changeLanguage;
-function translate(entry, language) {
+function translate(entry, language, substitutions) {
+    if (substitutions === void 0) { substitutions = []; }
+    var ret;
     if (language == "EN")
-        return entry in languageEN ? languageEN[entry] : entry;
+        ret = entry in languageEN ? languageEN[entry] : entry;
     if (language == "CH")
-        return entry in languageCH ? languageCH[entry] : entry;
-    return entry;
+        ret = entry in languageCH ? languageCH[entry] : entry;
+    for (var i = 0; i < substitutions.length; i++)
+        ret = ret.replace("$(" + i + ")", substitutions[i]);
+    return ret;
 }
 exports.translate = translate;
 function loadLanguage(language) {

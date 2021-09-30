@@ -20,7 +20,12 @@
       <form action="/challenge" method="post">
         <div class="pairOfElements">
           <div class="firstOfPair">
-            <select size="5" name="challengedName" id="challengedName" onchange="setSelect(this.selectedIndex)">
+            <select
+              size="5"
+              name="challengedName"
+              id="challengedName"
+              onchange="mymodule.setSelect(this.selectedIndex)"
+            >
               <% for (const [key, value] of Object.entries(challengeblePlayers)) { %>
               <option><%= value %></option>
               <% } %>
@@ -28,7 +33,7 @@
             <select
               name="challengedID"
               id="challengedID"
-              onchange="setSelect(this.selectedIndex)"
+              onchange="mymodule.setSelect(this.selectedIndex)"
               required
               style="display: none"
             >
@@ -46,7 +51,12 @@
       <form action="/challenge" method="post">
         <div class="pairOfElements">
           <div class="firstOfPair">
-            <select size="5" name="alreadyChallenged" id="alreadyChallenged" onchange="setSelect2(this.selectedIndex)">
+            <select
+              size="5"
+              name="alreadyChallenged"
+              id="alreadyChallenged"
+              onchange="mymodule.setSelect2(this.selectedIndex)"
+            >
               <% for (const [key, value] of Object.entries(challengedPlayers)) { %>
               <option><%= value %></option>
               <% } %>
@@ -54,7 +64,7 @@
             <select
               name="alreadyChallengedID"
               id="alreadyChallengedID"
-              onchange="setSelect2(this.selectedIndex)"
+              onchange="mymodule.setSelect2(this.selectedIndex)"
               required
               style="display: none"
             >

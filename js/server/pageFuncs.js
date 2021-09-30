@@ -37,44 +37,30 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.acceptChallange = exports.unChallengePlayer = exports.challengePlayer = exports.getCurrentMatches = exports.getChallengeblePlayers = exports.getChallengedPlayers = exports.getChallengers = void 0;
-var Pool = require("pg").Pool;
-var yn = require("yn");
-var auth = require("./auth");
+var uh = require("./userHandling");
+var db = require("./dbHandling");
 function getChallengers(userId) {
     return __awaiter(this, void 0, void 0, function () {
-        var pool, client, result, ids, _i, _a, row, usernames, ret, i, err_1;
+        var result, ids, _i, _a, row, usernames, ret, i;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 4, , 5]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
+                case 0: return [4 /*yield*/, db.query('SELECT "user1id" FROM "challenges" WHERE "user2id" = $1', [userId])];
                 case 1:
-                    client = _b.sent();
-                    return [4 /*yield*/, client.query('SELECT "user1id" FROM "challenges" WHERE "user2id" = $1', [userId])];
-                case 2:
                     result = _b.sent();
-                    client.release();
+                    if (result === null)
+                        return [2 /*return*/, {}];
                     ids = [];
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
                         ids.push(row.user1id);
                     }
-                    return [4 /*yield*/, auth.getUsernames(ids)];
-                case 3:
+                    return [4 /*yield*/, uh.getUsernames(ids)];
+                case 2:
                     usernames = _b.sent();
                     ret = {};
                     for (i in ids)
                         ret[ids[i]] = usernames[i];
                     return [2 /*return*/, ret];
-                case 4:
-                    err_1 = _b.sent();
-                    console.error(err_1);
-                    return [2 /*return*/, {}];
-                case 5: return [2 /*return*/];
             }
         });
     });
@@ -82,39 +68,26 @@ function getChallengers(userId) {
 exports.getChallengers = getChallengers;
 function getChallengedPlayers(userId) {
     return __awaiter(this, void 0, void 0, function () {
-        var pool, client, result, ids, _i, _a, row, usernames, ret, i, err_2;
+        var result, ids, _i, _a, row, usernames, ret, i;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 4, , 5]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
+                case 0: return [4 /*yield*/, db.query('SELECT "user2id" FROM "challenges" WHERE "user1id" = $1', [userId])];
                 case 1:
-                    client = _b.sent();
-                    return [4 /*yield*/, client.query('SELECT "user2id" FROM "challenges" WHERE "user1id" = $1', [userId])];
-                case 2:
                     result = _b.sent();
-                    client.release();
+                    if (result === null)
+                        return [2 /*return*/, {}];
                     ids = [];
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
                         ids.push(row.user2id);
                     }
-                    return [4 /*yield*/, auth.getUsernames(ids)];
-                case 3:
+                    return [4 /*yield*/, uh.getUsernames(ids)];
+                case 2:
                     usernames = _b.sent();
                     ret = {};
                     for (i in ids)
                         ret[ids[i]] = usernames[i];
                     return [2 /*return*/, ret];
-                case 4:
-                    err_2 = _b.sent();
-                    console.error(err_2);
-                    return [2 /*return*/, {}];
-                case 5: return [2 /*return*/];
             }
         });
     });
@@ -122,7 +95,7 @@ function getChallengedPlayers(userId) {
 exports.getChallengedPlayers = getChallengedPlayers;
 function getChallengeblePlayers(userId) {
     return __awaiter(this, void 0, void 0, function () {
-        var query, pool, client, result, ret, _i, _a, row, err_3;
+        var query, result, ret, _i, _a, row;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -131,32 +104,19 @@ function getChallengeblePlayers(userId) {
                     query += 'SELECT "user2id" AS id FROM "challenges" WHERE "user1id" = $1 UNION ';
                     query += 'SELECT "player1id" AS id FROM "matchlist" WHERE "player2id" = $1 AND "endcause" IS NULL UNION ';
                     query += 'SELECT "player2id" AS id FROM "matchlist" WHERE "player1id" = $1 AND "endcause" IS NULL)';
-                    _b.label = 1;
+                    return [4 /*yield*/, db.query(query, [userId])];
                 case 1:
-                    _b.trys.push([1, 4, , 5]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
-                case 2:
-                    client = _b.sent();
-                    return [4 /*yield*/, client.query(query, [userId])];
-                case 3:
                     result = _b.sent();
-                    client.release();
+                    if (result === null)
+                        return [2 /*return*/, {}];
                     ret = {};
+                    console.log(result.rows);
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
                         if (row.id != userId)
                             ret[row.id] = row.username;
                     }
                     return [2 /*return*/, ret];
-                case 4:
-                    err_3 = _b.sent();
-                    console.error(err_3);
-                    return [2 /*return*/, {}];
-                case 5: return [2 /*return*/];
             }
         });
     });
@@ -164,22 +124,14 @@ function getChallengeblePlayers(userId) {
 exports.getChallengeblePlayers = getChallengeblePlayers;
 function getCurrentMatches(userId) {
     return __awaiter(this, void 0, void 0, function () {
-        var pool, client, result, ids, _i, _a, row, usernames, ret, i, err_4;
+        var result, ids, _i, _a, row, usernames, ret, i;
         return __generator(this, function (_b) {
             switch (_b.label) {
-                case 0:
-                    _b.trys.push([0, 4, , 5]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
+                case 0: return [4 /*yield*/, db.query('SELECT "matchindex", "player1id", "player2id" FROM "matchlist" WHERE ("player1id"=$1 OR "player2id"=$1) AND "endcause" is null', [userId])];
                 case 1:
-                    client = _b.sent();
-                    return [4 /*yield*/, client.query('SELECT "matchindex", "player1id", "player2id" FROM "matchlist" WHERE "player1id"=$1 OR "player2id"=$1', [userId])];
-                case 2:
                     result = _b.sent();
-                    client.release();
+                    if (result === null)
+                        return [2 /*return*/, {}];
                     ids = [];
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
@@ -188,18 +140,13 @@ function getCurrentMatches(userId) {
                         else
                             ids.push(row.player1id);
                     }
-                    return [4 /*yield*/, auth.getUsernames(ids)];
-                case 3:
+                    return [4 /*yield*/, uh.getUsernames(ids)];
+                case 2:
                     usernames = _b.sent();
                     ret = {};
                     for (i in result.rows)
                         ret[result.rows[i].matchindex] = usernames[i];
                     return [2 /*return*/, ret];
-                case 4:
-                    err_4 = _b.sent();
-                    console.error(err_4);
-                    return [2 /*return*/, {}];
-                case 5: return [2 /*return*/];
             }
         });
     });
@@ -207,7 +154,7 @@ function getCurrentMatches(userId) {
 exports.getCurrentMatches = getCurrentMatches;
 function challengePlayer(userId, challengeId) {
     return __awaiter(this, void 0, void 0, function () {
-        var query, pool, client, result, err_5;
+        var query, result;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -219,34 +166,16 @@ function challengePlayer(userId, challengeId) {
                     query += 'SELECT "player1id" AS id FROM "matchlist" WHERE "player2id" = $1 AND "endcause" IS NULL UNION ';
                     query += 'SELECT "player2id" AS id FROM "matchlist" WHERE "player1id" = $1 AND "endcause" IS NULL';
                     query += ') AS takenplayers WHERE "id" = $2';
-                    _a.label = 1;
+                    return [4 /*yield*/, db.query(query, [userId, challengeId])];
                 case 1:
-                    _a.trys.push([1, 5, , 6]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
-                case 2:
-                    client = _a.sent();
-                    return [4 /*yield*/, client.query(query, [userId, challengeId])];
-                case 3:
                     result = _a.sent();
-                    if (result.rowCount > 0) {
-                        client.release();
+                    if (result === null || result.rowCount > 0)
                         return [2 /*return*/, false];
-                    }
                     query = 'INSERT INTO "challenges" ("user1id", "user2id") VALUES ($1, $2)';
-                    return [4 /*yield*/, client.query(query, [userId, challengeId])];
-                case 4:
+                    return [4 /*yield*/, db.query(query, [userId, challengeId])];
+                case 2:
                     _a.sent();
-                    client.release();
                     return [2 /*return*/, true];
-                case 5:
-                    err_5 = _a.sent();
-                    console.log(err_5);
-                    return [2 /*return*/, false];
-                case 6: return [2 /*return*/];
             }
         });
     });
@@ -254,33 +183,17 @@ function challengePlayer(userId, challengeId) {
 exports.challengePlayer = challengePlayer;
 function unChallengePlayer(userId, challengerId) {
     return __awaiter(this, void 0, void 0, function () {
-        var query, pool, client, err_6;
+        var query;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (userId == null || isNaN(userId) || challengerId == null || isNaN(challengerId))
                         return [2 /*return*/, false];
                     query = 'DELETE FROM "challenges" WHERE "user1id"=$1 AND "user2id"=$2';
-                    _a.label = 1;
+                    return [4 /*yield*/, db.query(query, [userId, challengerId])];
                 case 1:
-                    _a.trys.push([1, 4, , 5]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
-                case 2:
-                    client = _a.sent();
-                    return [4 /*yield*/, client.query(query, [userId, challengerId])];
-                case 3:
                     _a.sent();
-                    client.release();
                     return [2 /*return*/, true];
-                case 4:
-                    err_6 = _a.sent();
-                    console.log(err_6);
-                    return [2 /*return*/, false];
-                case 5: return [2 /*return*/];
             }
         });
     });
@@ -288,44 +201,28 @@ function unChallengePlayer(userId, challengerId) {
 exports.unChallengePlayer = unChallengePlayer;
 function acceptChallange(userId, challengerId, color) {
     return __awaiter(this, void 0, void 0, function () {
-        var query, pool, client, result, err_7;
+        var query, result;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     if (userId == null || isNaN(userId) || challengerId == null || isNaN(challengerId) || (color !== 0 && color !== 1))
                         return [2 /*return*/, 0];
                     query = 'DELETE FROM "challenges" WHERE "user2id"=$1 AND "user1id"=$2';
-                    _a.label = 1;
+                    return [4 /*yield*/, db.query(query, [userId, challengerId])];
                 case 1:
-                    _a.trys.push([1, 5, , 6]);
-                    pool = new Pool({
-                        connectionString: process.env.DATABASE_URL,
-                        ssl: yn(process.env.DATABASE_SSL),
-                    });
-                    return [4 /*yield*/, pool.connect()];
-                case 2:
-                    client = _a.sent();
-                    return [4 /*yield*/, client.query(query, [userId, challengerId])];
-                case 3:
                     result = _a.sent();
-                    client.release();
-                    if (result.rowCount == 0)
+                    if (result === null || result.rowCount === 0)
                         return [2 /*return*/, 0];
                     if (color == 0)
                         query = 'INSERT INTO "matchlist" ("player1id", "player2id") VALUES ($1, $2) RETURNING "matchindex";';
                     else
                         query = 'INSERT INTO "matchlist" ("player1id", "player2id") VALUES ($2, $1) RETURNING "matchindex";';
-                    return [4 /*yield*/, client.query(query, [userId, challengerId])];
-                case 4:
+                    return [4 /*yield*/, db.query(query, [userId, challengerId])];
+                case 2:
                     result = _a.sent();
-                    if (result.rowCount != 1)
+                    if (result === null || result.rowCount != 1)
                         return [2 /*return*/, 0];
                     return [2 /*return*/, result.rows[0].matchindex];
-                case 5:
-                    err_7 = _a.sent();
-                    console.log(err_7);
-                    return [2 /*return*/, 0];
-                case 6: return [2 /*return*/];
             }
         });
     });

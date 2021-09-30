@@ -47,118 +47,126 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var auth = require("./auth");
+var uh = require("./userHandling");
 var lang = require("./lang");
 var pageFuncs = require("./pageFuncs");
 var express = require("express");
-var socket_io_1 = require("socket.io");
 var path = require("path");
 var session = require("express-session");
+var socketHandle = require("./socketHandling");
 var PORT = process.env.PORT;
+var sessionMiddleware = session({ secret: "psfjigomisodfjnsiojfn", saveUninitialized: true, resave: true });
 var server = express()
     .use(express.static(path.join(__dirname, "../../public")))
     .use(express.urlencoded())
-    .use(session({ secret: "psfjigomisodfjnsiojfn", saveUninitialized: true, resave: true }))
+    .use(sessionMiddleware)
     .set("views", path.join(__dirname, "../../views"))
     .set("view engine", "ejs")
     .get("/*", httpGet)
     .post("/*", httpPost)
     .listen(PORT, function () { return console.log("Listening on " + PORT); });
-var io = new socket_io_1.Server(server);
-io.on("connection", function (socket) {
-    console.log("Client connected " + socket.id);
-    socket.on("disconnect", function () { return console.log("Client disconnected " + socket.id); });
-    socket.on("newMessage", function (message) { return console.log(message); });
-});
-setInterval(function () { return io.emit("dbg", "yep"); }, 5000);
+socketHandle.initSockets(server, sessionMiddleware);
 function httpGet(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var splittedURL, adress, args, _a, _b, _c, _d, _e;
+        var splittedURL, adress, args, _a, _b, _c, _d, _e, playerIds, playerColor, playerNames;
         var _f, _g;
         return __generator(this, function (_h) {
             switch (_h.label) {
                 case 0:
                     splittedURL = req.url.split("?", 2);
                     adress = splittedURL[0];
-                    args = splittedURL[1];
+                    args = typeof splittedURL[1] === "string" ? splittedURL[1] : "";
                     _a = adress;
                     switch (_a) {
                         case "/challenge": return [3 /*break*/, 1];
                         case "/main": return [3 /*break*/, 5];
                         case "/play": return [3 /*break*/, 9];
-                        case "/profile": return [3 /*break*/, 11];
-                        case "/register": return [3 /*break*/, 13];
-                        case "/logout": return [3 /*break*/, 17];
-                        case "/login": return [3 /*break*/, 18];
+                        case "/profile": return [3 /*break*/, 13];
+                        case "/register": return [3 /*break*/, 15];
+                        case "/logout": return [3 /*break*/, 19];
+                        case "/login": return [3 /*break*/, 20];
                     }
-                    return [3 /*break*/, 22];
+                    return [3 /*break*/, 24];
                 case 1:
                     _b = render;
                     _c = ["pages/challenge", req, res];
                     _f = {};
-                    return [4 /*yield*/, pageFuncs.getChallengeblePlayers(auth.getUserId(req.session))];
+                    return [4 /*yield*/, pageFuncs.getChallengeblePlayers(uh.getUserId(req.session))];
                 case 2:
                     _f.challengeblePlayers = _h.sent();
-                    return [4 /*yield*/, pageFuncs.getChallengedPlayers(auth.getUserId(req.session))];
+                    return [4 /*yield*/, pageFuncs.getChallengedPlayers(uh.getUserId(req.session))];
                 case 3: return [4 /*yield*/, _b.apply(void 0, _c.concat([(_f.challengedPlayers = _h.sent(),
                             _f)]))];
                 case 4:
                     _h.sent();
-                    return [3 /*break*/, 23];
+                    return [3 /*break*/, 25];
                 case 5:
                     _d = render;
                     _e = ["pages/main", req, res];
                     _g = {};
-                    return [4 /*yield*/, pageFuncs.getChallengers(auth.getUserId(req.session))];
+                    return [4 /*yield*/, pageFuncs.getChallengers(uh.getUserId(req.session))];
                 case 6:
                     _g.challengers = _h.sent();
-                    return [4 /*yield*/, pageFuncs.getCurrentMatches(auth.getUserId(req.session))];
+                    return [4 /*yield*/, pageFuncs.getCurrentMatches(uh.getUserId(req.session))];
                 case 7: return [4 /*yield*/, _d.apply(void 0, _e.concat([(_g.currentMatches = _h.sent(),
                             _g)]))];
                 case 8:
                     _h.sent();
-                    return [3 /*break*/, 23];
-                case 9: return [4 /*yield*/, render("pages/play", req, res)];
+                    return [3 /*break*/, 25];
+                case 9: return [4 /*yield*/, uh.getPlayerIds(+getArg(args, "id"))];
                 case 10:
-                    _h.sent();
-                    return [3 /*break*/, 23];
-                case 11: return [4 /*yield*/, render("pages/profile", req, res)];
+                    playerIds = _h.sent();
+                    playerColor = uh.getUserColorFromList(playerIds, uh.getUserId(req.session));
+                    return [4 /*yield*/, uh.getUsernames(playerIds)];
+                case 11:
+                    playerNames = _h.sent();
+                    if (playerNames.length !== 2)
+                        playerNames = ["", ""];
+                    return [4 /*yield*/, render("pages/play", req, res, {
+                            player1Name: playerNames[0],
+                            player2Name: playerNames[1],
+                            playerColor: playerColor,
+                        })];
                 case 12:
                     _h.sent();
-                    return [3 /*break*/, 23];
-                case 13:
-                    if (!auth.isLoggedIn(req.session)) return [3 /*break*/, 14];
-                    res.redirect("/main");
-                    return [3 /*break*/, 16];
-                case 14: return [4 /*yield*/, render("pages/register", req, res)];
+                    return [3 /*break*/, 25];
+                case 13: return [4 /*yield*/, render("pages/profile", req, res)];
+                case 14:
+                    _h.sent();
+                    return [3 /*break*/, 25];
                 case 15:
-                    _h.sent();
-                    _h.label = 16;
-                case 16: return [3 /*break*/, 23];
-                case 17:
-                    auth.logout(req.session);
-                    res.redirect("/login");
-                    return [3 /*break*/, 23];
-                case 18:
-                    if (!auth.isLoggedIn(req.session)) return [3 /*break*/, 19];
+                    if (!uh.isLoggedIn(req.session)) return [3 /*break*/, 16];
                     res.redirect("/main");
-                    return [3 /*break*/, 21];
-                case 19: return [4 /*yield*/, render("pages/login", req, res)];
-                case 20:
+                    return [3 /*break*/, 18];
+                case 16: return [4 /*yield*/, render("pages/register", req, res)];
+                case 17:
                     _h.sent();
-                    _h.label = 21;
-                case 21: return [3 /*break*/, 23];
-                case 22:
+                    _h.label = 18;
+                case 18: return [3 /*break*/, 25];
+                case 19:
+                    uh.logout(req.session);
                     res.redirect("/login");
+                    return [3 /*break*/, 25];
+                case 20:
+                    if (!uh.isLoggedIn(req.session)) return [3 /*break*/, 21];
+                    res.redirect("/main");
                     return [3 /*break*/, 23];
-                case 23: return [2 /*return*/];
+                case 21: return [4 /*yield*/, render("pages/login", req, res)];
+                case 22:
+                    _h.sent();
+                    _h.label = 23;
+                case 23: return [3 /*break*/, 25];
+                case 24:
+                    res.redirect("/login");
+                    return [3 /*break*/, 25];
+                case 25: return [2 /*return*/];
             }
         });
     });
 }
 function httpPost(req, res) {
     return __awaiter(this, void 0, void 0, function () {
-        var splittedURL, adress, args, _a, result, result, matchID;
+        var splittedURL, adress, args, _a, result, result, matchId;
         return __generator(this, function (_b) {
             switch (_b.label) {
                 case 0:
@@ -176,7 +184,7 @@ function httpPost(req, res) {
                     return [3 /*break*/, 31];
                 case 1:
                     if (!(typeof req.body.username === "string" && typeof req.body.password === "string")) return [3 /*break*/, 6];
-                    return [4 /*yield*/, auth.login(req.body.username, req.body.password, req.session)];
+                    return [4 /*yield*/, uh.login(req.body.username, req.body.password, req.session)];
                 case 2:
                     result = _b.sent();
                     if (!result.result) return [3 /*break*/, 3];
@@ -196,7 +204,7 @@ function httpPost(req, res) {
                     if (!(typeof req.body.username === "string" &&
                         typeof req.body.password === "string" &&
                         typeof req.body.password2 === "string")) return [3 /*break*/, 12];
-                    return [4 /*yield*/, auth.createAccount(req.body.username, req.body.password, req.body.password2)];
+                    return [4 /*yield*/, uh.createAccount(req.body.username, req.body.password, req.body.password2)];
                 case 10:
                     result = _b.sent();
                     if (!!result.result) return [3 /*break*/, 12];
@@ -218,13 +226,13 @@ function httpPost(req, res) {
                     return [3 /*break*/, 32];
                 case 15:
                     if (!(typeof req.body.challengedID === "string")) return [3 /*break*/, 17];
-                    return [4 /*yield*/, pageFuncs.challengePlayer(auth.getUserId(req.session), +req.body.challengedID)];
+                    return [4 /*yield*/, pageFuncs.challengePlayer(uh.getUserId(req.session), +req.body.challengedID)];
                 case 16:
                     _b.sent();
                     return [3 /*break*/, 19];
                 case 17:
                     if (!(typeof req.body.alreadyChallengedID === "string")) return [3 /*break*/, 19];
-                    return [4 /*yield*/, pageFuncs.unChallengePlayer(auth.getUserId(req.session), +req.body.alreadyChallengedID)];
+                    return [4 /*yield*/, pageFuncs.unChallengePlayer(uh.getUserId(req.session), +req.body.alreadyChallengedID)];
                 case 18:
                     _b.sent();
                     _b.label = 19;
@@ -236,17 +244,17 @@ function httpPost(req, res) {
                         +req.body.challengerID != null &&
                         !isNaN(+req.body.challengerID))) return [3 /*break*/, 29];
                     if (!(typeof req.body.black === "string" || typeof req.body.white === "string")) return [3 /*break*/, 26];
-                    matchID = void 0;
+                    matchId = void 0;
                     if (!(typeof req.body.black === "string")) return [3 /*break*/, 22];
-                    return [4 /*yield*/, pageFuncs.acceptChallange(auth.getUserId(req.session), +req.body.challengerID, 0)];
+                    return [4 /*yield*/, pageFuncs.acceptChallange(uh.getUserId(req.session), +req.body.challengerID, 0)];
                 case 21:
-                    matchID = _b.sent();
+                    matchId = _b.sent();
                     return [3 /*break*/, 24];
-                case 22: return [4 /*yield*/, pageFuncs.acceptChallange(auth.getUserId(req.session), +req.body.challengerID, 1)];
+                case 22: return [4 /*yield*/, pageFuncs.acceptChallange(uh.getUserId(req.session), +req.body.challengerID, 1)];
                 case 23:
-                    matchID = _b.sent();
+                    matchId = _b.sent();
                     _b.label = 24;
-                case 24: return [4 /*yield*/, res.redirect("pages/play?id=" + matchID, req, res)];
+                case 24: return [4 /*yield*/, res.redirect("pages/play?id=" + matchId, req, res)];
                 case 25:
                     _b.sent();
                     return [3 /*break*/, 28];
@@ -273,7 +281,7 @@ function render(page, req, res, extraParam) {
         var username;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, auth.getUserName(req.session)];
+                case 0: return [4 /*yield*/, uh.getUserName(req.session)];
                 case 1:
                     username = _a.sent();
                     return [4 /*yield*/, res.render(page, __assign({ username: username, langFunc: lang, lang: typeof req.session.language === "string" ? req.session.language : "EN" }, extraParam))];
@@ -283,4 +291,11 @@ function render(page, req, res, extraParam) {
             }
         });
     });
+}
+function getArg(argsString, arg) {
+    var argsSplit = argsString.split(/[=&]+/);
+    for (var i = 0; i < argsSplit.length; i += 2)
+        if (argsSplit[i] === arg)
+            return argsSplit[i + 1];
+    return "";
 }

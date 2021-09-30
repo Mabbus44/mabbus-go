@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html>
-  <head> </head>
+  <head>
+    <script type="text/javascript" src="/js/profile.js"></script>
+    <%- include('../partials/head'); %>
+  </head>
   <body>
-    profile
+    <div class="contentDiv">
+      <h1><%= langFunc.translate("Profile", lang) %></h1>
+      <hr class="h1Line" />
+      <a href="/register" class="linkbutton"><%= langFunc.translate("Main", lang)%></a>
+      <label id="matchHistory"><%= langFunc.translate("Match history", lang)%></label>
+      <?php
+					matchList();
+				?>
+    </div>
   </body>
 </html>

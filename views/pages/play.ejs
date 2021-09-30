@@ -1,7 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script>
+      t = {"yourTurn": "<%- langFunc.translate("Your turn", lang) %>",
+      "notYourTurn": "<%- langFunc.translate("Not your turn", lang) %>",
+      "selectLocation": "<%- langFunc.translate("Select location", lang) %>",
+      "areYouSureYouWantToGiveUp": "<%- langFunc.translate("Are you sure you want to give up?", lang) %>",
+      "areYouSureYouWantToPass": "<%- langFunc.translate("Are you sure you want to pass?", lang) %>",
+      "scoreWinner": "<%- langFunc.translate("Score winner", lang) %>",
+      "surrenderWinner": "<%- langFunc.translate("Surrender winner", lang) %>"};
+    </script>
     <%- include('../partials/head'); %>
+    <script type="text/javascript" src="/js/play.js""></script>
   </head>
   <body>
     <div class="contentDiv">
@@ -13,9 +23,9 @@
           <div id="canvasMessageDiv">
             <label id="canvasLabel"></label>
             <div id="canvasButtonsDiv">
-              <button onclick="btnYes()" id="canvasYesButton"><?php dict("Yes")?></button>
-              <button onclick="btnNo()" id="canvasNoButton"><?php dict("No")?></button>
-              <button onclick="btnOk()" id="canvasOkButton"><?php dict("Ok")?></button>
+              <button onclick="mymodule.btnYes()" id="canvasYesButton"><%- langFunc.translate("Yes", lang) %></button>
+              <button onclick="mymodule.btnNo()" id="canvasNoButton"><%- langFunc.translate("No", lang) %></button>
+              <button onclick="mymodule.btnOk()" id="canvasOkButton"><%- langFunc.translate("Ok", lang) %></button>
             </div>
           </div>
         </div>
@@ -25,31 +35,25 @@
           </div>
           <div class="leftAlignedRow">
             <canvas width="30" height="30" id="blackStone"></canvas>
-            <label id="blackName"><?php echo getNameFromMatchID($_REQUEST["id"], 0); ?></label>
+            <label id="blackName"><%= player1Name %></label>
             <img id="blackArrow" src="../Graphics/arrow40x30.png" alt="arrow" />
             <label id="blackScore"></label>
           </div>
           <div class="leftAlignedRow">
             <canvas width="30" height="30" id="whiteStone"></canvas>
-            <label id="whiteName"><?php echo getNameFromMatchID($_REQUEST["id"], 1); ?></label>
+            <label id="whiteName"><%= player2Name %></label>
             <img id="whiteArrow" src="../Graphics/arrow40x30.png" alt="arrow" />
             <label id="whiteScore"></label>
           </div>
-          <button onclick="btnPreviewScore()"><?php dict("Preview score")?></button>
-          <button onclick="btnGiveUp()" id="btnGiveUp"><?php dict("Give up")?></button>
-          <button onclick="btnPass()" id="btnPass"><?php dict("Pass")?></button>
-          <button onclick="btnExecute()" id="btnExecute"><?php dict("Confirm")?></button>
+          <button onclick="mymodule.btnPreviewScore()"><%- langFunc.translate("Preview score", lang) %></button>
+          <button onclick="mymodule.btnGiveUp()" id="btnGiveUp"><%- langFunc.translate("Give up", lang) %></button>
+          <button onclick="mymodule.btnPass()" id="btnPass"><%- langFunc.translate("Pass", lang) %></button>
+          <button onclick="mymodule.btnConfirm()" id="btnExecute"><%- langFunc.translate("Confirm", lang) %></button>
         </div>
       </div>
       <label style="clear: left; display: block" id="dbg"></label>
-      <script>
-        yourTurnText = "<%- langFunc.translate("Your turn", lang) %>";
-        notYourTurnText = "<%- langFunc.translate("Not your turn", lang) %>";
-        selectLocationText = "<<%- langFunc.translate("Select location", lang) %>";
-        areYouSureYouWantToGiveUpText = "<%- langFunc.translate("Are you sure you want to give up?", lang) %>";
-      </script>
-      <button type="button" id="sendMessage" onclick="sendMessage()">Send message</button>
-      <script type="text/javascript" src="/js/play.js""></script>
     </div>
+    <script type="text/javascript">mymodule.initJS(t, <%- playerColor %>)</script>
   </body>
 </html>
+

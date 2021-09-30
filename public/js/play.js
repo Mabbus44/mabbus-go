@@ -1,4 +1,4 @@
-(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.mymodule = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 
 /**
  * Expose `Backoff`.
@@ -2220,7 +2220,7 @@ class WS extends Transport {
 module.exports = WS;
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"../transport":7,"../util":14,"./websocket-constructor":12,"buffer":44,"debug":16,"engine.io-parser":22,"parseqs":24,"yeast":41}],14:[function(require,module,exports){
+},{"../transport":7,"../util":14,"./websocket-constructor":12,"buffer":45,"debug":16,"engine.io-parser":22,"parseqs":24,"yeast":41}],14:[function(require,module,exports){
 module.exports.pick = (obj, ...attr) => {
   return attr.reduce((acc, k) => {
     if (obj.hasOwnProperty(k)) {
@@ -2545,7 +2545,7 @@ formatters.j = function (v) {
 };
 
 }).call(this)}).call(this,require('_process'))
-},{"./common":17,"_process":46}],17:[function(require,module,exports){
+},{"./common":17,"_process":47}],17:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -4355,7 +4355,7 @@ exports.url = url;
 
 },{"debug":32,"parseuri":25}],32:[function(require,module,exports){
 arguments[4][16][0].apply(exports,arguments)
-},{"./common":33,"_process":46,"dup":16}],33:[function(require,module,exports){
+},{"./common":33,"_process":47,"dup":16}],33:[function(require,module,exports){
 arguments[4][17][0].apply(exports,arguments)
 },{"dup":17,"ms":34}],34:[function(require,module,exports){
 arguments[4][18][0].apply(exports,arguments)
@@ -4782,7 +4782,7 @@ exports.hasBinary = hasBinary;
 
 },{}],38:[function(require,module,exports){
 arguments[4][16][0].apply(exports,arguments)
-},{"./common":39,"_process":46,"dup":16}],39:[function(require,module,exports){
+},{"./common":39,"_process":47,"dup":16}],39:[function(require,module,exports){
 
 /**
  * This is the common logic for both the Node.js and web browser
@@ -5120,13 +5120,606 @@ module.exports = yeast;
 },{}],42:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.btnOk = exports.btnNo = exports.btnYes = exports.btnPreviewScore = exports.btnGiveUp = exports.btnPass = exports.btnConfirm = exports.initJS = void 0;
 var socket_io_client_1 = require("socket.io-client");
+var bf = require("../common/boardFuncs");
+var urlParams = new URLSearchParams(window.location.search);
+var matchId = +urlParams.get("id");
+var boardSize = 19;
+var squareSize = 30;
+var board = bf.getEmptyBoard();
+var moves = [];
+var markedSquare = [-1, -1];
+var blockingPopup = false;
 var socket = socket_io_client_1.io();
-socket.on("dbg", function (msg) {
-    document.getElementById("dbg").innerHTML = msg;
-});
+var t;
+var userColor = 0;
+var consecutiveMoves = 0;
+var popupFunction = null;
+function initJS(tData, userColorData) {
+    t = tData;
+    userColor = userColorData;
+    document.getElementById("goCanvas").addEventListener("click", canvasClick, false);
+    socket.on("new moves", updateMoves);
+    socket.on("message", showMessage);
+    socket.on("match ended", showEndMatchPopup);
+    socket.emit("get moves", matchId);
+    socket.emit("subscribe to match", matchId);
+    var blackStoneCanvas = document.getElementById("blackStone");
+    var bctx = blackStoneCanvas.getContext("2d");
+    drawBlackStone(bctx, 0, 0);
+    var whiteStoneCanvas = document.getElementById("whiteStone");
+    var wctx = whiteStoneCanvas.getContext("2d");
+    drawWhiteStone(wctx, 0, 0);
+    draw();
+}
+exports.initJS = initJS;
+function updateMoves(newMoves) {
+    var oldMaxMove = consecutiveMoves;
+    for (var _i = 0, _a = Object.entries(newMoves); _i < _a.length; _i++) {
+        var _b = _a[_i], i = _b[0], coord = _b[1];
+        moves[i] = coord;
+    }
+    for (var i = consecutiveMoves; i < moves.length; i++) {
+        if (typeof moves[i] === "object")
+            consecutiveMoves++;
+        else
+            break;
+    }
+    if (consecutiveMoves > oldMaxMove)
+        bf.move(board, moves.slice(oldMaxMove, consecutiveMoves), (oldMaxMove % 2) + 1);
+    markedSquare = [-1, -1];
+    draw();
+}
+function btnConfirm() {
+    if ((moves.length % 2) + 1 !== userColor)
+        return showMessage(t.notYourTurn);
+    if (markedSquare === [-1, -1])
+        return showMessage(t.selectLocation);
+    socket.emit("make move", matchId, markedSquare[0], markedSquare[1]);
+}
+exports.btnConfirm = btnConfirm;
+function btnPass() {
+    if ((moves.length % 2) + 1 !== userColor)
+        return showMessage(t.notYourTurn);
+    showPopup(t.areYouSureYouWantToPass, "YesNo", function () {
+        socket.emit("pass turn", matchId);
+    });
+}
+exports.btnPass = btnPass;
+function btnGiveUp() {
+    if ((moves.length % 2) + 1 !== userColor)
+        return showMessage(t.notYourTurn);
+    showPopup(t.areYouSureYouWantToGiveUp, "YesNo", function () {
+        socket.emit("give up", matchId);
+    });
+}
+exports.btnGiveUp = btnGiveUp;
+function btnPreviewScore() {
+    drawScorePreview();
+}
+exports.btnPreviewScore = btnPreviewScore;
+function btnYes() {
+    hidePopup();
+    popupFunction();
+}
+exports.btnYes = btnYes;
+function btnNo() {
+    hidePopup();
+}
+exports.btnNo = btnNo;
+function btnOk() {
+    hidePopup();
+    popupFunction();
+}
+exports.btnOk = btnOk;
+function canvasClick(evt) {
+    if (blockingPopup)
+        return;
+    var canvas = document.getElementById("goCanvas");
+    var rect = canvas.getBoundingClientRect();
+    var mousePos = [evt.clientX - rect.left, evt.clientY - rect.top];
+    var boardPos = mouseToBoard(mousePos[0], mousePos[1]);
+    if (boardPos[0] < 0)
+        markedSquare = [-1, -1];
+    if (boardPos[0] == markedSquare[0] && boardPos[1] == markedSquare[1]) {
+        markedSquare = [-1, -1];
+    }
+    else {
+        markedSquare = boardPos;
+    }
+    draw();
+}
+function mouseToBoard(x, y) {
+    var retX = Math.floor(x / squareSize);
+    var retY = Math.floor(y / squareSize);
+    if (retX < 0 || retX >= boardSize || retY < 0 || retY >= boardSize) {
+        retX = -1;
+        retY = -1;
+    }
+    return [retX, retY];
+}
+function drawScorePreview() {
+    var scoreBoard = bf.getScoreBoard(board);
+    var points = bf.countPoints(board, scoreBoard);
+    var c = document.getElementById("goCanvas");
+    var ctx = c.getContext("2d");
+    drawEmptyBoard(ctx, scoreBoard);
+    for (var y = 0; y < boardSize; y++) {
+        for (var x = 0; x < boardSize; x++) {
+            if (board[x][y] === 1)
+                drawBlackStone(ctx, x, y);
+            if (board[x][y] === 2)
+                drawWhiteStone(ctx, x, y);
+            if ((board[x][y] == 1 && scoreBoard[x][y] == 2) || (board[x][y] == 2 && scoreBoard[x][y] == 1))
+                drawCross(ctx, x, y);
+        }
+    }
+    drawArrows(true);
+    drawScore([points[0].toString(), points[1].toString()]);
+}
+function draw() {
+    var canvas = document.getElementById("goCanvas");
+    var ctx = canvas.getContext("2d");
+    drawEmptyBoard(ctx);
+    for (var x = 0; x < boardSize; x++) {
+        for (var y = 0; y < boardSize; y++) {
+            if (board[x][y] === 1)
+                drawBlackStone(ctx, x, y);
+            if (board[x][y] === 2)
+                drawWhiteStone(ctx, x, y);
+        }
+    }
+    var moveID = moves.length - 1;
+    while (moveID >= 0 && moves[moveID].x < 0)
+        moveID--;
+    if (moveID >= 0)
+        markLastPlayedStone(ctx, moves[moveID].x, moves[moveID].y);
+    markSelectedStone(ctx);
+    drawArrows();
+    drawScore(["", ""]);
+    drawYourTurn();
+}
+function drawEmptyBoard(ctx, scoreBoard) {
+    if (scoreBoard === void 0) { scoreBoard = null; }
+    if (scoreBoard === null) {
+        ctx.fillStyle = "#DFC156";
+        ctx.beginPath();
+        ctx.fillRect(0, 0, boardSize * squareSize, boardSize * squareSize);
+    }
+    else {
+        for (var y = 0; y < boardSize; y++) {
+            for (var x = 0; x < boardSize; x++) {
+                if (scoreBoard[x][y] == 0) {
+                    ctx.fillStyle = "#DFC156";
+                }
+                else if (scoreBoard[x][y] == 1) {
+                    ctx.fillStyle = "#444444";
+                }
+                else if (scoreBoard[x][y] == 2) {
+                    ctx.fillStyle = "#BBBBBB";
+                }
+                ctx.beginPath();
+                ctx.fillRect(x * squareSize, y * squareSize, x * squareSize + squareSize, y * squareSize + squareSize);
+            }
+        }
+    }
+    ctx.strokeStyle = "#000000";
+    ctx.lineWidth = 1;
+    for (var i = 0; i < boardSize; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0.5 * squareSize, (i + 0.5) * squareSize);
+        ctx.lineTo((boardSize - 0.5) * squareSize, (i + 0.5) * squareSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo((i + 0.5) * squareSize, 0.5 * squareSize);
+        ctx.lineTo((i + 0.5) * squareSize, (boardSize - 0.5) * squareSize);
+        ctx.stroke();
+    }
+}
+function drawBlackStone(ctx, x, y) {
+    ctx.fillStyle = "#000000";
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.fill();
+}
+function drawWhiteStone(ctx, x, y) {
+    ctx.fillStyle = "#FFFFFF";
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = "#000000";
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+function drawCross(ctx, x, y) {
+    ctx.strokeStyle = "#FF0000";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo((x + 0.1) * squareSize, (y + 0.1) * squareSize);
+    ctx.lineTo((x + 0.9) * squareSize, (y + 0.9) * squareSize);
+    ctx.moveTo((x + 0.9) * squareSize, (y + 0.1) * squareSize);
+    ctx.lineTo((x + 0.1) * squareSize, (y + 0.9) * squareSize);
+    ctx.stroke();
+}
+function markLastPlayedStone(ctx, x, y) {
+    ctx.strokeStyle = "#FFFF00";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4 + 1, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+function markSelectedStone(ctx) {
+    if (markedSquare[0] > -1) {
+        ctx.fillStyle = "#FF0000";
+        ctx.beginPath();
+        ctx.arc((markedSquare[0] + 0.5) * squareSize, (markedSquare[1] + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+function drawArrows(hideBoth) {
+    if (hideBoth === void 0) { hideBoth = false; }
+    if (hideBoth) {
+        document.getElementById("whiteArrow").style.display = "none";
+        document.getElementById("blackArrow").style.display = "none";
+        return;
+    }
+    if (moves.length % 2 === 0) {
+        document.getElementById("whiteArrow").style.display = "none";
+        document.getElementById("blackArrow").style.display = "block";
+    }
+    else {
+        document.getElementById("whiteArrow").style.display = "block";
+        document.getElementById("blackArrow").style.display = "none";
+    }
+}
+function drawScore(score) {
+    document.getElementById("blackScore").innerHTML = score[0];
+    document.getElementById("whiteScore").innerHTML = score[1];
+}
+function drawYourTurn() {
+    if ((moves.length % 2) + 1 === userColor) {
+        document.getElementById("yourTurn").innerHTML = t.yourTurn;
+        document.getElementById("yourTurnDiv").style.display = "block";
+    }
+    if ((moves.length % 2) + 1 === 3 - userColor) {
+        document.getElementById("yourTurn").innerHTML = t.notYourTurn;
+        document.getElementById("yourTurnDiv").style.display = "none";
+    }
+    if (userColor === 0) {
+        document.getElementById("yourTurn").innerHTML = "";
+        document.getElementById("yourTurnDiv").style.display = "none";
+    }
+}
+function showEndMatchPopup(points) {
+    var msg;
+    var blackName = document.getElementById("blackName").innerHTML;
+    var whiteName = document.getElementById("whiteName").innerHTML;
+    if (points[0] < 0) {
+        if (points[0] > points[1]) {
+            msg = multiReplace(t.surrenderWinner, [whiteName, blackName]);
+        }
+        else {
+            msg = multiReplace(t.surrenderWinner, [blackName, whiteName]);
+        }
+    }
+    else {
+        if (points[0] > points[1]) {
+            msg = multiReplace(t.surrenderWinner, [
+                blackName,
+                whiteName,
+                points[0].toString(),
+                points[1].toString(),
+                blackName,
+            ]);
+        }
+        else {
+            msg = multiReplace(t.surrenderWinner, [
+                blackName,
+                whiteName,
+                points[0].toString(),
+                points[1].toString(),
+                whiteName,
+            ]);
+        }
+    }
+    showPopup(msg, "Ok", function () {
+        window.location.href = "/main";
+    });
+}
+function multiReplace(str, substitutions) {
+    var ret = str;
+    for (var i = 0; i < substitutions.length; i++)
+        ret = ret.replace("$(" + i + ")", substitutions[i]);
+    return ret;
+}
+function showMessage(msg) {
+    if (blockingPopup)
+        return;
+    document.getElementById("canvasMessageDiv").style.display = "inline";
+    document.getElementById("canvasLabel").innerHTML = msg;
+    setTimeout(function () {
+        document.getElementById("canvasMessageDiv").style.display = "none";
+        document.getElementById("canvasLabel").innerHTML = "";
+    }, 3000);
+}
+function showPopup(msg, type, func) {
+    if (blockingPopup)
+        return;
+    document.getElementById("canvasMessageDiv").style.display = "inline";
+    document.getElementById("canvasLabel").innerHTML = msg;
+    if (type == "Ok") {
+        document.getElementById("canvasOkButton").style.display = "inline";
+        blockingPopup = true;
+        popupFunction = func;
+    }
+    else if (type == "YesNo") {
+        document.getElementById("canvasYesButton").style.display = "inline";
+        document.getElementById("canvasNoButton").style.display = "inline";
+        blockingPopup = true;
+        popupFunction = func;
+    }
+}
+function hidePopup() {
+    document.getElementById("canvasMessageDiv").style.display = "none";
+    document.getElementById("canvasOkButton").style.display = "none";
+    document.getElementById("canvasYesButton").style.display = "none";
+    document.getElementById("canvasNoButton").style.display = "none";
+    document.getElementById("canvasLabel").innerHTML = "";
+    blockingPopup = false;
+}
 
-},{"socket.io-client":26}],43:[function(require,module,exports){
+},{"../common/boardFuncs":43,"socket.io-client":26}],43:[function(require,module,exports){
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getScoreBoard = exports.countPoints = exports.isValidMove = exports.move = exports.movesToBoard = exports.getEmptyBoard = void 0;
+function getEmptyBoard(defaultValue) {
+    if (defaultValue === void 0) { defaultValue = 0; }
+    var board = new Array(19);
+    for (var x = 0; x < 19; x++) {
+        board[x] = new Array(19);
+        for (var y = 0; y < 19; y++)
+            board[x][y] = defaultValue;
+    }
+    return board;
+}
+exports.getEmptyBoard = getEmptyBoard;
+function movesToBoard(moves) {
+    var board = getEmptyBoard();
+    move(board, moves, 1);
+    return board;
+}
+exports.movesToBoard = movesToBoard;
+function move(board, moves, color) {
+    for (var _i = 0, moves_1 = moves; _i < moves_1.length; _i++) {
+        var m = moves_1[_i];
+        if (m.x >= 0) {
+            board[m.x][m.y] = color;
+            captureStones(board, m, 3 - color);
+        }
+        color = 3 - color;
+    }
+}
+exports.move = move;
+function isValidMove(moves, coords, color) {
+    if (moves.length % 2 !== color - 1)
+        return false;
+    var board = movesToBoard(moves);
+    if (board[coords.x][coords.y] !== 0)
+        return false;
+    move(board, [coords], color);
+    if (getSurroundedStones(board, coords, color).length > 0)
+        return false;
+    return true;
+}
+exports.isValidMove = isValidMove;
+function countPoints(board, scoreBoard) {
+    var points = [0, 7.5];
+    for (var x = 0; x < 19; x++) {
+        for (var y = 0; y < 19; y++) {
+            if (scoreBoard[x][y] === 0) {
+                if (board[x][y] > 0)
+                    points[board[x][y] - 1]++;
+            }
+            else
+                points[scoreBoard[x][y] - 1]++;
+        }
+    }
+    return points;
+}
+exports.countPoints = countPoints;
+function getScoreBoard(board) {
+    var scoreBoard = getEmptyBoard(-1);
+    var safeGroups = [];
+    //Get safe groups
+    for (var x = 0; x < 19; x++) {
+        for (var y = 0; y < 19; y++) {
+            if (board[x][y] != 0 && scoreBoard[x][y] == -1) {
+                var safeGroup = getSafeStones({ x: x, y: y }, board[x][y], board);
+                if (safeGroup.eyes.length > 1)
+                    safeGroups.push(safeGroup);
+                for (var _i = 0, _a = safeGroup.safeStones; _i < _a.length; _i++) {
+                    var p = _a[_i];
+                    scoreBoard[p.x][p.y] = 0;
+                }
+            }
+        }
+    }
+    scoreBoard = getEmptyBoard(-1);
+    //Remove eyes with safegroups in them
+    for (var _b = 0, safeGroups_1 = safeGroups; _b < safeGroups_1.length; _b++) {
+        var safeGroup = safeGroups_1[_b];
+        for (var i = safeGroup.eyes.length - 1; i >= 0; i--) {
+            var isEye = true;
+            for (var _c = 0, _d = safeGroup.eyes[i]; _c < _d.length; _c++) {
+                var eyeSquare = _d[_c];
+                if (board[eyeSquare.x][eyeSquare.y] !== 0) {
+                    for (var _e = 0, safeGroups_2 = safeGroups; _e < safeGroups_2.length; _e++) {
+                        var compSafeGroup = safeGroups_2[_e];
+                        if (safeGroup !== compSafeGroup) {
+                            if (includesCoord(safeGroup.safeStones, eyeSquare)) {
+                                isEye = false;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!isEye)
+                    break;
+            }
+            if (!isEye)
+                safeGroup.eyes.slice(i, 1);
+        }
+    }
+    //Set safe scoreBoard squares
+    for (var _f = 0, safeGroups_3 = safeGroups; _f < safeGroups_3.length; _f++) {
+        var safeGroup = safeGroups_3[_f];
+        if (safeGroup.eyes.length > 1) {
+            var color = board[safeGroup.safeStones[0].x][safeGroup.safeStones[0].y];
+            for (var _g = 0, _h = safeGroup.safeStones; _g < _h.length; _g++) {
+                var safeSquare = _h[_g];
+                scoreBoard[safeSquare.x][safeSquare.y] = color;
+            }
+        }
+    }
+    //Set squares surrounded by safe squares to also be safe
+    for (var x = 0; x < 19; x++) {
+        for (var y = 0; y < 19; y++) {
+            if (scoreBoard[x][y] == -1) {
+                setSurroundedSafeStones(scoreBoard, { x: x, y: y });
+            }
+        }
+    }
+    return scoreBoard;
+}
+exports.getScoreBoard = getScoreBoard;
+function getSafeStones(coords, color, board) {
+    var safeStones = [];
+    var notEyeSquares = [];
+    var eyes = [];
+    var adjacent = [];
+    var x = coords.x;
+    var y = coords.y;
+    if (x >= 0 && x < 19 && y >= 0 && y < 19 && board[x][y] === color)
+        safeStones[0] = { x: x, y: y };
+    for (var _i = 0, safeStones_1 = safeStones; _i < safeStones_1.length; _i++) {
+        var safeStone = safeStones_1[_i];
+        adjacent = getAdjacent(safeStone, true);
+        for (var _a = 0, adjacent_1 = adjacent; _a < adjacent_1.length; _a++) {
+            var a = adjacent_1[_a];
+            if (board[a.x][a.y] === color &&
+                !(board[safeStone.x][a.y] === 3 - color && board[a.x][safeStone.y] === 3 - color) &&
+                !includesCoord(safeStones, a))
+                safeStones.push(a);
+            if (board[a.x][a.y] !== color && (a.x === safeStone.x || a.y === safeStone.y))
+                checkForEye(a, color, board, eyes, notEyeSquares);
+        }
+    }
+    return { safeStones: safeStones, eyes: eyes };
+}
+function setSurroundedSafeStones(scoreBoard, coords) {
+    var checkedStones = [{ x: coords.x, y: coords.y }];
+    var color = -1;
+    for (var _i = 0, checkedStones_1 = checkedStones; _i < checkedStones_1.length; _i++) {
+        var stone = checkedStones_1[_i];
+        var adj = getAdjacent(stone);
+        for (var _a = 0, adj_1 = adj; _a < adj_1.length; _a++) {
+            var a = adj_1[_a];
+            var aColor = scoreBoard[a.x][a.y];
+            if (aColor === -1 && !includesCoord(checkedStones, a))
+                checkedStones.push(a);
+            if (aColor > 0 && color === -1)
+                color = aColor;
+            else if (color > 0 && aColor > 0 && aColor !== color)
+                color = 0;
+        }
+    }
+    if (color === -1)
+        color = 0;
+    for (var _b = 0, checkedStones_2 = checkedStones; _b < checkedStones_2.length; _b++) {
+        var stone = checkedStones_2[_b];
+        scoreBoard[stone.x][stone.y] = color;
+    }
+}
+function checkForEye(coords, color, board, eyes, notEyeSquares) {
+    for (var _i = 0, eyes_1 = eyes; _i < eyes_1.length; _i++) {
+        var eye = eyes_1[_i];
+        if (includesCoord(eye, coords))
+            return;
+    }
+    if (includesCoord(notEyeSquares, coords))
+        return;
+    var newEye = [{ x: coords.x, y: coords.y }];
+    for (var _a = 0, newEye_1 = newEye; _a < newEye_1.length; _a++) {
+        var eyeSquare = newEye_1[_a];
+        var adjacent = getAdjacent(eyeSquare);
+        for (var _b = 0, adjacent_2 = adjacent; _b < adjacent_2.length; _b++) {
+            var a = adjacent_2[_b];
+            if (board[a.x][a.y] !== color && !includesCoord(newEye, a))
+                newEye.push(a);
+        }
+        if (newEye.length > 25) {
+            notEyeSquares.push.apply(notEyeSquares, newEye);
+            return;
+        }
+    }
+    eyes.push(newEye);
+}
+function getSurroundedStones(board, coords, color) {
+    var capStones = [{ x: coords.x, y: coords.y }];
+    if (board[coords.x][coords.y] !== color)
+        return [];
+    for (var _i = 0, capStones_1 = capStones; _i < capStones_1.length; _i++) {
+        var stone = capStones_1[_i];
+        var adj = getAdjacent(stone);
+        for (var _a = 0, adj_2 = adj; _a < adj_2.length; _a++) {
+            var a = adj_2[_a];
+            if (board[a.x][a.y] === 0)
+                return [];
+            if (board[a.x][a.y] === color && !includesCoord(capStones, a))
+                capStones.push(a);
+        }
+    }
+    return capStones;
+}
+function getAdjacent(coords, diagonal) {
+    if (diagonal === void 0) { diagonal = false; }
+    var a = [];
+    for (var dx = -1; dx < 2; dx++) {
+        for (var dy = -1; dy < 2; dy++) {
+            if (coords.x + dx >= 0 &&
+                coords.x + dx <= 18 &&
+                coords.y + dy >= 0 &&
+                coords.y + dy <= 18 &&
+                !(dx === 0 && dy === 0) &&
+                (diagonal || dx === 0 || dy === 0))
+                a.push({ x: coords.x + dx, y: coords.y + dy });
+        }
+    }
+    return a;
+}
+function captureStones(board, coords, color) {
+    var adj = getAdjacent(coords);
+    for (var _i = 0, adj_3 = adj; _i < adj_3.length; _i++) {
+        var a = adj_3[_i];
+        var surr = getSurroundedStones(board, a, color);
+        for (var _a = 0, surr_1 = surr; _a < surr_1.length; _a++) {
+            var s = surr_1[_a];
+            board[s.x][s.y] = 0;
+        }
+    }
+}
+function includesCoord(coordArray, coord) {
+    for (var _i = 0, coordArray_1 = coordArray; _i < coordArray_1.length; _i++) {
+        var c = coordArray_1[_i];
+        if (c.x === coord.x && c.y === coord.y)
+            return true;
+    }
+    return false;
+}
+
+},{}],44:[function(require,module,exports){
 'use strict'
 
 exports.byteLength = byteLength
@@ -5278,7 +5871,7 @@ function fromByteArray (uint8) {
   return parts.join('')
 }
 
-},{}],44:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 (function (Buffer){(function (){
 /*!
  * The buffer module from node.js, for the browser.
@@ -7059,7 +7652,7 @@ function numberIsNaN (obj) {
 }
 
 }).call(this)}).call(this,require("buffer").Buffer)
-},{"base64-js":43,"buffer":44,"ieee754":45}],45:[function(require,module,exports){
+},{"base64-js":44,"buffer":45,"ieee754":46}],46:[function(require,module,exports){
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 exports.read = function (buffer, offset, isLE, mLen, nBytes) {
   var e, m
@@ -7146,7 +7739,7 @@ exports.write = function (buffer, value, offset, isLE, mLen, nBytes) {
   buffer[offset + i - d] |= s * 128
 }
 
-},{}],46:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 // shim for using process in browser
 var process = module.exports = {};
 
@@ -7332,4 +7925,5 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}]},{},[42]);
+},{}]},{},[42])(42)
+});
