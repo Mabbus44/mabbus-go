@@ -69,19 +69,19 @@ async function checkNewCredentials(
     return {
       result: false,
       message:
-        "Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long",
+        "Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long"
     };
   if (!passwordRegex.test(password))
     return {
       result: false,
       message:
-        "Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long",
+        "Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long"
     };
   let result = await db.query('SELECT "username" FROM "credentials" WHERE "username"=$1', [username]);
   if (result.rowCount > 0) return { result: false, message: "Username taken" };
   return {
     result: true,
-    message: "Credentials ok",
+    message: "Credentials ok"
   };
 }
 

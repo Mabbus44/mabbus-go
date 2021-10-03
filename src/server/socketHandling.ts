@@ -85,7 +85,7 @@ async function commitMove(matchId: number, x: number, y: number, userColor: numb
   if (typeof matchId !== "number" || isNaN(matchId)) return false;
   if (typeof userColor !== "number" || isNaN(userColor) || userColor < 1 || userColor > 2) return false;
   let result = await db.query('SELECT "x", "y" FROM "moves" WHERE "matchindex" = $1 ORDER BY "moveindex" ASC', [
-    matchId,
+    matchId
   ]);
   if (result === null) return false;
   if (result.rowCount % 2 !== userColor - 1) return false;
@@ -93,7 +93,7 @@ async function commitMove(matchId: number, x: number, y: number, userColor: numb
     x,
     y,
     result.rowCount + 1,
-    matchId,
+    matchId
   ]);
   pushMove(matchId, result.rowCount + 1, x, y);
   if ((result.rowCount > 0 && result.rows[result.rowCount - 1] === -1 && x === -1) || x === -2) {
@@ -103,7 +103,7 @@ async function commitMove(matchId: number, x: number, y: number, userColor: numb
 
 async function endMatch(matchId: number): Promise<void> {
   let result = await db.query('SELECT "x", "y" FROM "moves" WHERE "matchindex" = $1 ORDER BY "moveindex" ASC', [
-    matchId,
+    matchId
   ]);
   let points: number[];
   if (result === null) return;
@@ -113,12 +113,12 @@ async function endMatch(matchId: number): Promise<void> {
     points = [-2, -2];
     if (moves.length % 2 === 0) {
       db.query('UPDATE "matchlist" SET "winner"="player1id", "endcause"=\'surrender\' WHERE "matchindex"=$1', [
-        matchId,
+        matchId
       ]);
       points[0] = -1;
     } else {
       db.query('UPDATE "matchlist" SET "winner"="player2id", "endcause"=\'surrender\' WHERE "matchindex"=$1', [
-        matchId,
+        matchId
       ]);
       points[1] = -1;
     }

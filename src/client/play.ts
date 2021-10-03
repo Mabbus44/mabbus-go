@@ -295,7 +295,7 @@ function showEndMatchPopup(points: number[]): void {
         whiteName,
         points[0].toString(),
         points[1].toString(),
-        blackName,
+        blackName
       ]);
     } else {
       msg = multiReplace(t.surrenderWinner, [
@@ -303,7 +303,7 @@ function showEndMatchPopup(points: number[]): void {
         whiteName,
         points[0].toString(),
         points[1].toString(),
-        whiteName,
+        whiteName
       ]);
     }
   }

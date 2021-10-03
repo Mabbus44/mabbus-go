@@ -27,13 +27,13 @@ async function httpGet(req, res) {
     case "/challenge":
       await render("pages/challenge", req, res, {
         challengeblePlayers: await pageFuncs.getChallengeblePlayers(uh.getUserId(req.session)),
-        challengedPlayers: await pageFuncs.getChallengedPlayers(uh.getUserId(req.session)),
+        challengedPlayers: await pageFuncs.getChallengedPlayers(uh.getUserId(req.session))
       });
       break;
     case "/main":
       await render("pages/main", req, res, {
         challengers: await pageFuncs.getChallengers(uh.getUserId(req.session)),
-        currentMatches: await pageFuncs.getCurrentMatches(uh.getUserId(req.session)),
+        currentMatches: await pageFuncs.getCurrentMatches(uh.getUserId(req.session))
       });
       break;
     case "/play":
@@ -44,7 +44,7 @@ async function httpGet(req, res) {
       await render("pages/play", req, res, {
         player1Name: playerNames[0],
         player2Name: playerNames[1],
-        playerColor: playerColor,
+        playerColor: playerColor
       });
       break;
     case "/profile":
@@ -137,7 +137,7 @@ async function render(page: string, req: any, res: any, extraParam = {}): Promis
     username: username,
     langFunc: lang,
     lang: typeof req.session.language === "string" ? req.session.language : "EN",
-    ...extraParam,
+    ...extraParam
   });
 }
 
