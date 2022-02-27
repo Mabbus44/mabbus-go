@@ -39,7 +39,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.query = void 0;
 var pg_1 = require("pg");
 var yn = require("yn");
-function query(query, arg) {
+function query(queryStr, arg) {
     return __awaiter(this, void 0, void 0, function () {
         var pool, client, result, err_1;
         return __generator(this, function (_a) {
@@ -53,7 +53,7 @@ function query(query, arg) {
                     return [4 /*yield*/, pool.connect()];
                 case 1:
                     client = _a.sent();
-                    return [4 /*yield*/, client.query(query, arg)];
+                    return [4 /*yield*/, client.query(queryStr, arg)];
                 case 2:
                     result = _a.sent();
                     client.release();

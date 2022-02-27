@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserId = exports.getUsernames = exports.getUserName = exports.isLoggedIn = exports.getPlayerIds = exports.getUserColorFromList = exports.getUserColor = exports.createAccount = exports.logout = exports.login = void 0;
+exports.getUsernames = exports.getUserName = exports.getUserId = exports.isLoggedIn = exports.getUserColor = exports.getPlayerIds = exports.getUserColorFromList = exports.createAccount = exports.logout = exports.login = void 0;
 var bc = require("bcrypt");
 var db = require("./dbHandling");
 function login(username, password, session) {
@@ -45,32 +45,67 @@ function login(username, password, session) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (typeof session != "object" || session == null)
-                        return [2 /*return*/, { result: false, message: "Internal error" }];
+                    if (typeof session !== 'object' || session == null)
+                        return [2 /*return*/, { result: false, message: 'Internal error' }];
                     return [4 /*yield*/, db.query('SELECT "id", "password" FROM "credentials" WHERE "username"=$1', [username])];
                 case 1:
                     result = _a.sent();
-                    if (result.rowCount != 1)
-                        return [2 /*return*/, { result: false, message: "Username does not exist" }];
+                    if (result.rowCount !== 1)
+                        return [2 /*return*/, { result: false, message: 'Username does not exist' }];
                     return [4 /*yield*/, bc.compare(password, result.rows[0].password)];
                 case 2:
                     if (!(_a.sent()))
-                        return [2 /*return*/, { result: false, message: "Wrong password" }];
+                        return [2 /*return*/, { result: false, message: 'Wrong password' }];
                     session.userId = result.rows[0].id;
-                    session.language = "EN";
-                    return [2 /*return*/, { result: true, message: "Login succeeded" }];
+                    session.language = 'EN';
+                    return [2 /*return*/, { result: true, message: 'Login succeeded' }];
             }
         });
     });
 }
 exports.login = login;
 function logout(session) {
-    if (typeof session != "object" || session == null)
+    if (typeof session !== 'object' || session == null)
         return false;
     session.destroy();
     return true;
 }
 exports.logout = logout;
+function checkNewCredentials(username, password, password2) {
+    return __awaiter(this, void 0, void 0, function () {
+        var usernameRegex, passwordRegex, result;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    usernameRegex = /^[\p{L}0-9_]{2,20}$/u;
+                    passwordRegex = /^[\p{L}0-9!().?\[\]_`~;:@#$%^&*+=]{4,50}$/u;
+                    if (password !== password2)
+                        return [2 /*return*/, { result: false, message: 'Passwords does not match' }];
+                    if (!usernameRegex.test(username)) {
+                        return [2 /*return*/, {
+                                result: false,
+                                message: 'Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long',
+                            }];
+                    }
+                    if (!passwordRegex.test(password)) {
+                        return [2 /*return*/, {
+                                result: false,
+                                message: 'Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long',
+                            }];
+                    }
+                    return [4 /*yield*/, db.query('SELECT "username" FROM "credentials" WHERE "username"=$1', [username])];
+                case 1:
+                    result = _a.sent();
+                    if (result.rowCount > 0)
+                        return [2 /*return*/, { result: false, message: 'Username taken' }];
+                    return [2 /*return*/, {
+                            result: true,
+                            message: 'Credentials ok',
+                        }];
+            }
+        });
+    });
+}
 function createAccount(username, password, password2) {
     return __awaiter(this, void 0, void 0, function () {
         var cresult, hashedPassword;
@@ -87,26 +122,12 @@ function createAccount(username, password, password2) {
                     return [4 /*yield*/, db.query('INSERT INTO "credentials" ("username", "password", "date_created") VALUES($1, $2, current_timestamp)', [username, hashedPassword])];
                 case 3:
                     _a.sent();
-                    return [2 /*return*/, { result: true, message: "Account created" }];
+                    return [2 /*return*/, { result: true, message: 'Account created' }];
             }
         });
     });
 }
 exports.createAccount = createAccount;
-function getUserColor(matchId, userId) {
-    return __awaiter(this, void 0, void 0, function () {
-        var ids;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, getPlayerIds(matchId)];
-                case 1:
-                    ids = _a.sent();
-                    return [2 /*return*/, getUserColorFromList(ids, userId)];
-            }
-        });
-    });
-}
-exports.getUserColor = getUserColor;
 function getUserColorFromList(playerIds, userId) {
     if (userId === playerIds[0])
         return 1;
@@ -122,7 +143,7 @@ function getPlayerIds(matchId) {
             switch (_a.label) {
                 case 0:
                     userId = [0, 0];
-                    if (typeof matchId !== "number" || matchId === undefined || isNaN(matchId))
+                    if (typeof matchId !== 'number' || matchId === undefined || isNaN(matchId))
                         return [2 /*return*/, userId];
                     return [4 /*yield*/, db.query('SELECT "player1id", "player2id" FROM "matchlist" WHERE "matchindex" = $1', [matchId])];
                 case 1:
@@ -137,47 +158,36 @@ function getPlayerIds(matchId) {
     });
 }
 exports.getPlayerIds = getPlayerIds;
-function checkNewCredentials(username, password, password2) {
+function getUserColor(matchId, userId) {
     return __awaiter(this, void 0, void 0, function () {
-        var usernameRegex, passwordRegex, result;
+        var ids;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    usernameRegex = /^[\p{L}0-9_]{2,20}$/u;
-                    passwordRegex = /^[\p{L}0-9!().?\[\]_`~;:@#$%^&*+=]{4,50}$/u;
-                    if (password != password2)
-                        return [2 /*return*/, { result: false, message: "Passwords does not match" }];
-                    if (!usernameRegex.test(username))
-                        return [2 /*return*/, {
-                                result: false,
-                                message: "Username can only contain alphabetic symbols, 0-9 and the special character _ and must be between 2 and 20 symbols long",
-                            }];
-                    if (!passwordRegex.test(password))
-                        return [2 /*return*/, {
-                                result: false,
-                                message: "Password can only contain alphabetic symbols, 0-9 and the special characters !().?[]_`~;:@#$%^&*+= and must be between 4 and 50 symbols long",
-                            }];
-                    return [4 /*yield*/, db.query('SELECT "username" FROM "credentials" WHERE "username"=$1', [username])];
+                case 0: return [4 /*yield*/, getPlayerIds(matchId)];
                 case 1:
-                    result = _a.sent();
-                    if (result.rowCount > 0)
-                        return [2 /*return*/, { result: false, message: "Username taken" }];
-                    return [2 /*return*/, {
-                            result: true,
-                            message: "Credentials ok",
-                        }];
+                    ids = _a.sent();
+                    return [2 /*return*/, getUserColorFromList(ids, userId)];
             }
         });
     });
 }
+exports.getUserColor = getUserColor;
 function isLoggedIn(session) {
-    if (typeof session != "object" || session == null)
+    if (typeof session !== 'object' || session == null)
         return false;
-    if (typeof session.userId != "number" || session.userId == null || session.userId <= 0)
+    if (typeof session.userId !== 'number' || session.userId == null || session.userId <= 0)
         return false;
     return true;
 }
 exports.isLoggedIn = isLoggedIn;
+function getUserId(session) {
+    if (typeof session.userId !== 'number')
+        return 0;
+    if (session.userId == null)
+        return 0;
+    return session.userId;
+}
+exports.getUserId = getUserId;
 function getUserName(session) {
     return __awaiter(this, void 0, void 0, function () {
         var result;
@@ -185,12 +195,12 @@ function getUserName(session) {
             switch (_a.label) {
                 case 0:
                     if (!isLoggedIn(session))
-                        return [2 /*return*/, ""];
+                        return [2 /*return*/, ''];
                     return [4 /*yield*/, db.query('SELECT "username" FROM "credentials" WHERE "id"=$1', [getUserId(session)])];
                 case 1:
                     result = _a.sent();
-                    if (result.rowCount != 1)
-                        return [2 /*return*/, ""];
+                    if (result.rowCount !== 1)
+                        return [2 /*return*/, ''];
                     return [2 /*return*/, result.rows[0].username];
             }
         });
@@ -208,11 +218,11 @@ function getUsernames(userIds) {
                     usernames = [];
                     for (_i = 0, userIds_1 = userIds; _i < userIds_1.length; _i++) {
                         id = userIds_1[_i];
-                        loopRows: for (_a = 0, _b = result.rows; _a < _b.length; _a++) {
+                        for (_a = 0, _b = result.rows; _a < _b.length; _a++) {
                             row = _b[_a];
                             if (row.id === id) {
                                 usernames.push(row.username);
-                                break loopRows;
+                                break;
                             }
                         }
                     }
@@ -222,11 +232,3 @@ function getUsernames(userIds) {
     });
 }
 exports.getUsernames = getUsernames;
-function getUserId(session) {
-    if (typeof session.userId != "number")
-        return 0;
-    if (session.userId == null)
-        return 0;
-    return session.userId;
-}
-exports.getUserId = getUserId;

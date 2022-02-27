@@ -5124,112 +5124,18 @@ exports.btnOk = exports.btnNo = exports.btnYes = exports.btnPreviewScore = expor
 var socket_io_client_1 = require("socket.io-client");
 var bf = require("../common/boardFuncs");
 var urlParams = new URLSearchParams(window.location.search);
-var matchId = +urlParams.get("id");
+var matchId = +urlParams.get('id');
 var boardSize = 19;
 var squareSize = 30;
 var board = bf.getEmptyBoard();
 var moves = [];
 var markedSquare = [-1, -1];
 var blockingPopup = false;
-var socket = socket_io_client_1.io();
+var socket = (0, socket_io_client_1.io)();
 var t;
 var userColor = 0;
 var consecutiveMoves = 0;
 var popupFunction = null;
-function initJS(tData, userColorData) {
-    t = tData;
-    userColor = userColorData;
-    document.getElementById("goCanvas").addEventListener("click", canvasClick, false);
-    socket.on("new moves", updateMoves);
-    socket.on("message", showMessage);
-    socket.on("match ended", showEndMatchPopup);
-    socket.emit("get moves", matchId);
-    socket.emit("subscribe to match", matchId);
-    var blackStoneCanvas = document.getElementById("blackStone");
-    var bctx = blackStoneCanvas.getContext("2d");
-    drawBlackStone(bctx, 0, 0);
-    var whiteStoneCanvas = document.getElementById("whiteStone");
-    var wctx = whiteStoneCanvas.getContext("2d");
-    drawWhiteStone(wctx, 0, 0);
-    draw();
-}
-exports.initJS = initJS;
-function updateMoves(newMoves) {
-    var oldMaxMove = consecutiveMoves;
-    for (var _i = 0, _a = Object.entries(newMoves); _i < _a.length; _i++) {
-        var _b = _a[_i], i = _b[0], coord = _b[1];
-        moves[i] = coord;
-    }
-    for (var i = consecutiveMoves; i < moves.length; i++) {
-        if (typeof moves[i] === "object")
-            consecutiveMoves++;
-        else
-            break;
-    }
-    if (consecutiveMoves > oldMaxMove)
-        bf.move(board, moves.slice(oldMaxMove, consecutiveMoves), (oldMaxMove % 2) + 1);
-    markedSquare = [-1, -1];
-    draw();
-}
-function btnConfirm() {
-    if ((moves.length % 2) + 1 !== userColor)
-        return showMessage(t.notYourTurn);
-    if (markedSquare === [-1, -1])
-        return showMessage(t.selectLocation);
-    socket.emit("make move", matchId, markedSquare[0], markedSquare[1]);
-}
-exports.btnConfirm = btnConfirm;
-function btnPass() {
-    if ((moves.length % 2) + 1 !== userColor)
-        return showMessage(t.notYourTurn);
-    showPopup(t.areYouSureYouWantToPass, "YesNo", function () {
-        socket.emit("pass turn", matchId);
-    });
-}
-exports.btnPass = btnPass;
-function btnGiveUp() {
-    if ((moves.length % 2) + 1 !== userColor)
-        return showMessage(t.notYourTurn);
-    showPopup(t.areYouSureYouWantToGiveUp, "YesNo", function () {
-        socket.emit("give up", matchId);
-    });
-}
-exports.btnGiveUp = btnGiveUp;
-function btnPreviewScore() {
-    drawScorePreview();
-}
-exports.btnPreviewScore = btnPreviewScore;
-function btnYes() {
-    hidePopup();
-    popupFunction();
-}
-exports.btnYes = btnYes;
-function btnNo() {
-    hidePopup();
-}
-exports.btnNo = btnNo;
-function btnOk() {
-    hidePopup();
-    popupFunction();
-}
-exports.btnOk = btnOk;
-function canvasClick(evt) {
-    if (blockingPopup)
-        return;
-    var canvas = document.getElementById("goCanvas");
-    var rect = canvas.getBoundingClientRect();
-    var mousePos = [evt.clientX - rect.left, evt.clientY - rect.top];
-    var boardPos = mouseToBoard(mousePos[0], mousePos[1]);
-    if (boardPos[0] < 0)
-        markedSquare = [-1, -1];
-    if (boardPos[0] == markedSquare[0] && boardPos[1] == markedSquare[1]) {
-        markedSquare = [-1, -1];
-    }
-    else {
-        markedSquare = boardPos;
-    }
-    draw();
-}
 function mouseToBoard(x, y) {
     var retX = Math.floor(x / squareSize);
     var retY = Math.floor(y / squareSize);
@@ -5239,28 +5145,120 @@ function mouseToBoard(x, y) {
     }
     return [retX, retY];
 }
-function drawScorePreview() {
-    var scoreBoard = bf.getScoreBoard(board);
-    var points = bf.countPoints(board, scoreBoard);
-    var c = document.getElementById("goCanvas");
-    var ctx = c.getContext("2d");
-    drawEmptyBoard(ctx, scoreBoard);
-    for (var y = 0; y < boardSize; y++) {
-        for (var x = 0; x < boardSize; x++) {
-            if (board[x][y] === 1)
-                drawBlackStone(ctx, x, y);
-            if (board[x][y] === 2)
-                drawWhiteStone(ctx, x, y);
-            if ((board[x][y] == 1 && scoreBoard[x][y] == 2) || (board[x][y] == 2 && scoreBoard[x][y] == 1))
-                drawCross(ctx, x, y);
+function drawEmptyBoard(ctx, scoreBoard) {
+    if (scoreBoard === void 0) { scoreBoard = null; }
+    if (scoreBoard === null) {
+        ctx.fillStyle = '#DFC156';
+        ctx.beginPath();
+        ctx.fillRect(0, 0, boardSize * squareSize, boardSize * squareSize);
+    }
+    else {
+        for (var y = 0; y < boardSize; y++) {
+            for (var x = 0; x < boardSize; x++) {
+                if (scoreBoard[x][y] === 0) {
+                    ctx.fillStyle = '#DFC156';
+                }
+                else if (scoreBoard[x][y] === 1) {
+                    ctx.fillStyle = '#444444';
+                }
+                else if (scoreBoard[x][y] === 2) {
+                    ctx.fillStyle = '#BBBBBB';
+                }
+                ctx.beginPath();
+                ctx.fillRect(x * squareSize, y * squareSize, x * squareSize + squareSize, y * squareSize + squareSize);
+            }
         }
     }
-    drawArrows(true);
-    drawScore([points[0].toString(), points[1].toString()]);
+    ctx.strokeStyle = '#000000';
+    ctx.lineWidth = 1;
+    for (var i = 0; i < boardSize; i++) {
+        ctx.beginPath();
+        ctx.moveTo(0.5 * squareSize, (i + 0.5) * squareSize);
+        ctx.lineTo((boardSize - 0.5) * squareSize, (i + 0.5) * squareSize);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo((i + 0.5) * squareSize, 0.5 * squareSize);
+        ctx.lineTo((i + 0.5) * squareSize, (boardSize - 0.5) * squareSize);
+        ctx.stroke();
+    }
+}
+function drawBlackStone(ctx, x, y) {
+    ctx.fillStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.fill();
+}
+function drawWhiteStone(ctx, x, y) {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.strokeStyle = '#000000';
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+function drawCross(ctx, x, y) {
+    ctx.strokeStyle = '#FF0000';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo((x + 0.1) * squareSize, (y + 0.1) * squareSize);
+    ctx.lineTo((x + 0.9) * squareSize, (y + 0.9) * squareSize);
+    ctx.moveTo((x + 0.9) * squareSize, (y + 0.1) * squareSize);
+    ctx.lineTo((x + 0.1) * squareSize, (y + 0.9) * squareSize);
+    ctx.stroke();
+}
+function markLastPlayedStone(ctx, x, y) {
+    ctx.strokeStyle = '#FFFF00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4 + 1, 0, 2 * Math.PI);
+    ctx.stroke();
+}
+function markSelectedStone(ctx) {
+    if (markedSquare[0] > -1) {
+        ctx.fillStyle = '#FF0000';
+        ctx.beginPath();
+        ctx.arc((markedSquare[0] + 0.5) * squareSize, (markedSquare[1] + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+}
+function drawArrows(hideBoth) {
+    if (hideBoth === void 0) { hideBoth = false; }
+    if (hideBoth) {
+        document.getElementById('whiteArrow').style.display = 'none';
+        document.getElementById('blackArrow').style.display = 'none';
+        return;
+    }
+    if (moves.length % 2 === 0) {
+        document.getElementById('whiteArrow').style.display = 'none';
+        document.getElementById('blackArrow').style.display = 'block';
+    }
+    else {
+        document.getElementById('whiteArrow').style.display = 'block';
+        document.getElementById('blackArrow').style.display = 'none';
+    }
+}
+function drawScore(score) {
+    document.getElementById('blackScore').innerHTML = score[0], document.getElementById('whiteScore').innerHTML = score[1];
+}
+function drawYourTurn() {
+    if ((moves.length % 2) + 1 === userColor) {
+        document.getElementById('yourTurn').innerHTML = t.yourTurn;
+        document.getElementById('yourTurnDiv').style.display = 'block';
+    }
+    if ((moves.length % 2) + 1 === 3 - userColor) {
+        document.getElementById('yourTurn').innerHTML = t.notYourTurn;
+        document.getElementById('yourTurnDiv').style.display = 'none';
+    }
+    if (userColor === 0) {
+        document.getElementById('yourTurn').innerHTML = '';
+        document.getElementById('yourTurnDiv').style.display = 'none';
+    }
 }
 function draw() {
-    var canvas = document.getElementById("goCanvas");
-    var ctx = canvas.getContext("2d");
+    var canvas = document.getElementById('goCanvas');
+    var ctx = canvas.getContext('2d');
     drawEmptyBoard(ctx);
     for (var x = 0; x < boardSize; x++) {
         for (var y = 0; y < boardSize; y++) {
@@ -5277,125 +5275,80 @@ function draw() {
         markLastPlayedStone(ctx, moves[moveID].x, moves[moveID].y);
     markSelectedStone(ctx);
     drawArrows();
-    drawScore(["", ""]);
+    drawScore(['', '']);
     drawYourTurn();
 }
-function drawEmptyBoard(ctx, scoreBoard) {
-    if (scoreBoard === void 0) { scoreBoard = null; }
-    if (scoreBoard === null) {
-        ctx.fillStyle = "#DFC156";
-        ctx.beginPath();
-        ctx.fillRect(0, 0, boardSize * squareSize, boardSize * squareSize);
-    }
-    else {
-        for (var y = 0; y < boardSize; y++) {
-            for (var x = 0; x < boardSize; x++) {
-                if (scoreBoard[x][y] == 0) {
-                    ctx.fillStyle = "#DFC156";
-                }
-                else if (scoreBoard[x][y] == 1) {
-                    ctx.fillStyle = "#444444";
-                }
-                else if (scoreBoard[x][y] == 2) {
-                    ctx.fillStyle = "#BBBBBB";
-                }
-                ctx.beginPath();
-                ctx.fillRect(x * squareSize, y * squareSize, x * squareSize + squareSize, y * squareSize + squareSize);
-            }
-        }
-    }
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
-    for (var i = 0; i < boardSize; i++) {
-        ctx.beginPath();
-        ctx.moveTo(0.5 * squareSize, (i + 0.5) * squareSize);
-        ctx.lineTo((boardSize - 0.5) * squareSize, (i + 0.5) * squareSize);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo((i + 0.5) * squareSize, 0.5 * squareSize);
-        ctx.lineTo((i + 0.5) * squareSize, (boardSize - 0.5) * squareSize);
-        ctx.stroke();
-    }
-}
-function drawBlackStone(ctx, x, y) {
-    ctx.fillStyle = "#000000";
-    ctx.beginPath();
-    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
-    ctx.fill();
-}
-function drawWhiteStone(ctx, x, y) {
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
-    ctx.fill();
-    ctx.strokeStyle = "#000000";
-    ctx.beginPath();
-    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
-    ctx.stroke();
-}
-function drawCross(ctx, x, y) {
-    ctx.strokeStyle = "#FF0000";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo((x + 0.1) * squareSize, (y + 0.1) * squareSize);
-    ctx.lineTo((x + 0.9) * squareSize, (y + 0.9) * squareSize);
-    ctx.moveTo((x + 0.9) * squareSize, (y + 0.1) * squareSize);
-    ctx.lineTo((x + 0.1) * squareSize, (y + 0.9) * squareSize);
-    ctx.stroke();
-}
-function markLastPlayedStone(ctx, x, y) {
-    ctx.strokeStyle = "#FFFF00";
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc((x + 0.5) * squareSize, (y + 0.5) * squareSize, squareSize * 0.4 + 1, 0, 2 * Math.PI);
-    ctx.stroke();
-}
-function markSelectedStone(ctx) {
-    if (markedSquare[0] > -1) {
-        ctx.fillStyle = "#FF0000";
-        ctx.beginPath();
-        ctx.arc((markedSquare[0] + 0.5) * squareSize, (markedSquare[1] + 0.5) * squareSize, squareSize * 0.4, 0, 2 * Math.PI);
-        ctx.fill();
-    }
-}
-function drawArrows(hideBoth) {
-    if (hideBoth === void 0) { hideBoth = false; }
-    if (hideBoth) {
-        document.getElementById("whiteArrow").style.display = "none";
-        document.getElementById("blackArrow").style.display = "none";
+function canvasClick(evt) {
+    if (blockingPopup)
         return;
-    }
-    if (moves.length % 2 === 0) {
-        document.getElementById("whiteArrow").style.display = "none";
-        document.getElementById("blackArrow").style.display = "block";
+    var canvas = document.getElementById('goCanvas');
+    var rect = canvas.getBoundingClientRect();
+    var mousePos = [evt.clientX - rect.left, evt.clientY - rect.top];
+    var boardPos = mouseToBoard(mousePos[0], mousePos[1]);
+    if (boardPos[0] < 0)
+        markedSquare = [-1, -1];
+    if (boardPos[0] === markedSquare[0] && boardPos[1] === markedSquare[1]) {
+        markedSquare = [-1, -1];
     }
     else {
-        document.getElementById("whiteArrow").style.display = "block";
-        document.getElementById("blackArrow").style.display = "none";
+        markedSquare = boardPos;
     }
+    draw();
 }
-function drawScore(score) {
-    document.getElementById("blackScore").innerHTML = score[0];
-    document.getElementById("whiteScore").innerHTML = score[1];
+function updateMoves(newMoves) {
+    var oldMaxMove = consecutiveMoves;
+    for (var _i = 0, _a = Object.entries(newMoves); _i < _a.length; _i++) {
+        var _b = _a[_i], i = _b[0], coord = _b[1];
+        moves[i] = coord;
+    }
+    for (var i = consecutiveMoves; i < moves.length; i++) {
+        if (typeof moves[i] === 'object')
+            consecutiveMoves++;
+        else
+            break;
+    }
+    if (consecutiveMoves > oldMaxMove)
+        bf.move(board, moves.slice(oldMaxMove, consecutiveMoves), (oldMaxMove % 2) + 1);
+    markedSquare = [-1, -1];
+    draw();
 }
-function drawYourTurn() {
-    if ((moves.length % 2) + 1 === userColor) {
-        document.getElementById("yourTurn").innerHTML = t.yourTurn;
-        document.getElementById("yourTurnDiv").style.display = "block";
+function showMessage(msg) {
+    if (blockingPopup)
+        return;
+    document.getElementById('canvasMessageDiv').style.display = 'inline';
+    document.getElementById('canvasLabel').innerHTML = msg;
+    setTimeout(function () {
+        document.getElementById('canvasMessageDiv').style.display = 'none';
+        document.getElementById('canvasLabel').innerHTML = '';
+    }, 3000);
+}
+function multiReplace(str, substitutions) {
+    var ret = str;
+    for (var i = 0; i < substitutions.length; i++)
+        ret = ret.replace("$(" + i + ")", substitutions[i]);
+    return ret;
+}
+function showPopup(msg, type, func) {
+    if (blockingPopup)
+        return;
+    document.getElementById('canvasMessageDiv').style.display = 'inline';
+    document.getElementById('canvasLabel').innerHTML = msg;
+    if (type === 'Ok') {
+        document.getElementById('canvasOkButton').style.display = 'inline';
+        blockingPopup = true;
+        popupFunction = func;
     }
-    if ((moves.length % 2) + 1 === 3 - userColor) {
-        document.getElementById("yourTurn").innerHTML = t.notYourTurn;
-        document.getElementById("yourTurnDiv").style.display = "none";
-    }
-    if (userColor === 0) {
-        document.getElementById("yourTurn").innerHTML = "";
-        document.getElementById("yourTurnDiv").style.display = "none";
+    else if (type === 'YesNo') {
+        document.getElementById('canvasYesButton').style.display = 'inline';
+        document.getElementById('canvasNoButton').style.display = 'inline';
+        blockingPopup = true;
+        popupFunction = func;
     }
 }
 function showEndMatchPopup(points) {
     var msg;
-    var blackName = document.getElementById("blackName").innerHTML;
-    var whiteName = document.getElementById("whiteName").innerHTML;
+    var blackName = document.getElementById('blackName').innerHTML;
+    var whiteName = document.getElementById('whiteName').innerHTML;
     if (points[0] < 0) {
         if (points[0] > points[1]) {
             msg = multiReplace(t.surrenderWinner, [whiteName, blackName]);
@@ -5404,76 +5357,129 @@ function showEndMatchPopup(points) {
             msg = multiReplace(t.surrenderWinner, [blackName, whiteName]);
         }
     }
-    else {
-        if (points[0] > points[1]) {
-            msg = multiReplace(t.surrenderWinner, [
-                blackName,
-                whiteName,
-                points[0].toString(),
-                points[1].toString(),
-                blackName,
-            ]);
-        }
-        else {
-            msg = multiReplace(t.surrenderWinner, [
-                blackName,
-                whiteName,
-                points[0].toString(),
-                points[1].toString(),
-                whiteName,
-            ]);
-        }
+    else if (points[0] > points[1]) {
+        msg = multiReplace(t.surrenderWinner, [
+            blackName,
+            whiteName,
+            points[0].toString(),
+            points[1].toString(),
+            blackName,
+        ]);
     }
-    showPopup(msg, "Ok", function () {
-        window.location.href = "/main";
+    else {
+        msg = multiReplace(t.surrenderWinner, [
+            blackName,
+            whiteName,
+            points[0].toString(),
+            points[1].toString(),
+            whiteName,
+        ]);
+    }
+    showPopup(msg, 'Ok', function () {
+        window.location.href = '/main';
     });
 }
-function multiReplace(str, substitutions) {
-    var ret = str;
-    for (var i = 0; i < substitutions.length; i++)
-        ret = ret.replace("$(" + i + ")", substitutions[i]);
-    return ret;
+function initJS(tData, userColorData) {
+    t = tData;
+    userColor = userColorData;
+    document.getElementById('goCanvas').addEventListener('click', canvasClick, false);
+    socket.on('new moves', updateMoves);
+    socket.on('message', showMessage);
+    socket.on('match ended', showEndMatchPopup);
+    socket.emit('get moves', matchId);
+    socket.emit('subscribe to match', matchId);
+    var blackStoneCanvas = document.getElementById('blackStone');
+    var bctx = blackStoneCanvas.getContext('2d');
+    drawBlackStone(bctx, 0, 0);
+    var whiteStoneCanvas = document.getElementById('whiteStone');
+    var wctx = whiteStoneCanvas.getContext('2d');
+    drawWhiteStone(wctx, 0, 0);
+    draw();
 }
-function showMessage(msg) {
-    if (blockingPopup)
+exports.initJS = initJS;
+function btnConfirm() {
+    if ((moves.length % 2) + 1 !== userColor) {
+        showMessage(t.notYourTurn);
         return;
-    document.getElementById("canvasMessageDiv").style.display = "inline";
-    document.getElementById("canvasLabel").innerHTML = msg;
-    setTimeout(function () {
-        document.getElementById("canvasMessageDiv").style.display = "none";
-        document.getElementById("canvasLabel").innerHTML = "";
-    }, 3000);
-}
-function showPopup(msg, type, func) {
-    if (blockingPopup)
+    }
+    if (markedSquare === [-1, -1]) {
+        showMessage(t.selectLocation);
         return;
-    document.getElementById("canvasMessageDiv").style.display = "inline";
-    document.getElementById("canvasLabel").innerHTML = msg;
-    if (type == "Ok") {
-        document.getElementById("canvasOkButton").style.display = "inline";
-        blockingPopup = true;
-        popupFunction = func;
     }
-    else if (type == "YesNo") {
-        document.getElementById("canvasYesButton").style.display = "inline";
-        document.getElementById("canvasNoButton").style.display = "inline";
-        blockingPopup = true;
-        popupFunction = func;
-    }
+    socket.emit('make move', matchId, markedSquare[0], markedSquare[1]);
 }
+exports.btnConfirm = btnConfirm;
+function btnPass() {
+    if ((moves.length % 2) + 1 !== userColor) {
+        showMessage(t.notYourTurn);
+        return;
+    }
+    showPopup(t.areYouSureYouWantToPass, 'YesNo', function () {
+        socket.emit('pass turn', matchId);
+    });
+}
+exports.btnPass = btnPass;
+function btnGiveUp() {
+    if ((moves.length % 2) + 1 !== userColor) {
+        showMessage(t.notYourTurn);
+        return;
+    }
+    showPopup(t.areYouSureYouWantToGiveUp, 'YesNo', function () {
+        socket.emit('give up', matchId);
+    });
+}
+exports.btnGiveUp = btnGiveUp;
+function drawScorePreview() {
+    var scoreBoard = bf.getScoreBoard(board);
+    var points = bf.countPoints(board, scoreBoard);
+    var c = document.getElementById('goCanvas');
+    var ctx = c.getContext('2d');
+    drawEmptyBoard(ctx, scoreBoard);
+    for (var y = 0; y < boardSize; y++) {
+        for (var x = 0; x < boardSize; x++) {
+            if (board[x][y] === 1)
+                drawBlackStone(ctx, x, y);
+            if (board[x][y] === 2)
+                drawWhiteStone(ctx, x, y);
+            if ((board[x][y] === 1 && scoreBoard[x][y] === 2) || (board[x][y] === 2 && scoreBoard[x][y] === 1)) {
+                drawCross(ctx, x, y);
+            }
+        }
+    }
+    drawArrows(true);
+    drawScore([points[0].toString(), points[1].toString()]);
+}
+function btnPreviewScore() {
+    drawScorePreview();
+}
+exports.btnPreviewScore = btnPreviewScore;
 function hidePopup() {
-    document.getElementById("canvasMessageDiv").style.display = "none";
-    document.getElementById("canvasOkButton").style.display = "none";
-    document.getElementById("canvasYesButton").style.display = "none";
-    document.getElementById("canvasNoButton").style.display = "none";
-    document.getElementById("canvasLabel").innerHTML = "";
+    document.getElementById('canvasMessageDiv').style.display = 'none';
+    document.getElementById('canvasOkButton').style.display = 'none';
+    document.getElementById('canvasYesButton').style.display = 'none';
+    document.getElementById('canvasNoButton').style.display = 'none';
+    document.getElementById('canvasLabel').innerHTML = '';
     blockingPopup = false;
 }
+function btnYes() {
+    hidePopup();
+    popupFunction();
+}
+exports.btnYes = btnYes;
+function btnNo() {
+    hidePopup();
+}
+exports.btnNo = btnNo;
+function btnOk() {
+    hidePopup();
+    popupFunction();
+}
+exports.btnOk = btnOk;
 
 },{"../common/boardFuncs":43,"socket.io-client":26}],43:[function(require,module,exports){
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getScoreBoard = exports.countPoints = exports.isValidMove = exports.move = exports.movesToBoard = exports.getEmptyBoard = void 0;
+exports.getScoreBoard = exports.countPoints = exports.isValidMove = exports.movesToBoard = exports.move = exports.getEmptyBoard = void 0;
 function getEmptyBoard(defaultValue) {
     if (defaultValue === void 0) { defaultValue = 0; }
     var board = new Array(19);
@@ -5485,12 +5491,59 @@ function getEmptyBoard(defaultValue) {
     return board;
 }
 exports.getEmptyBoard = getEmptyBoard;
-function movesToBoard(moves) {
-    var board = getEmptyBoard();
-    move(board, moves, 1);
-    return board;
+function getAdjacent(coords, diagonal) {
+    if (diagonal === void 0) { diagonal = false; }
+    var a = [];
+    for (var dx = -1; dx < 2; dx++) {
+        for (var dy = -1; dy < 2; dy++) {
+            if (coords.x + dx >= 0 &&
+                coords.x + dx <= 18 &&
+                coords.y + dy >= 0 &&
+                coords.y + dy <= 18 &&
+                !(dx === 0 && dy === 0) &&
+                (diagonal || dx === 0 || dy === 0)) {
+                a.push({ x: coords.x + dx, y: coords.y + dy });
+            }
+        }
+    }
+    return a;
 }
-exports.movesToBoard = movesToBoard;
+function includesCoord(coordArray, coord) {
+    for (var _i = 0, coordArray_1 = coordArray; _i < coordArray_1.length; _i++) {
+        var c = coordArray_1[_i];
+        if (c.x === coord.x && c.y === coord.y)
+            return true;
+    }
+    return false;
+}
+function getSurroundedStones(board, coords, color) {
+    var capStones = [{ x: coords.x, y: coords.y }];
+    if (board[coords.x][coords.y] !== color)
+        return [];
+    for (var _i = 0, capStones_1 = capStones; _i < capStones_1.length; _i++) {
+        var stone = capStones_1[_i];
+        var adj = getAdjacent(stone);
+        for (var _a = 0, adj_1 = adj; _a < adj_1.length; _a++) {
+            var a = adj_1[_a];
+            if (board[a.x][a.y] === 0)
+                return [];
+            if (board[a.x][a.y] === color && !includesCoord(capStones, a))
+                capStones.push(a);
+        }
+    }
+    return capStones;
+}
+function captureStones(board, coords, color) {
+    var adj = getAdjacent(coords);
+    for (var _i = 0, adj_2 = adj; _i < adj_2.length; _i++) {
+        var a = adj_2[_i];
+        var surr = getSurroundedStones(board, a, color);
+        for (var _a = 0, surr_1 = surr; _a < surr_1.length; _a++) {
+            var s = surr_1[_a];
+            board[s.x][s.y] = 0;
+        }
+    }
+}
 function move(board, moves, color) {
     for (var _i = 0, moves_1 = moves; _i < moves_1.length; _i++) {
         var m = moves_1[_i];
@@ -5502,6 +5555,12 @@ function move(board, moves, color) {
     }
 }
 exports.move = move;
+function movesToBoard(moves) {
+    var board = getEmptyBoard();
+    move(board, moves, 1);
+    return board;
+}
+exports.movesToBoard = movesToBoard;
 function isValidMove(moves, coords, color) {
     if (moves.length % 2 !== color - 1)
         return false;
@@ -5529,13 +5588,87 @@ function countPoints(board, scoreBoard) {
     return points;
 }
 exports.countPoints = countPoints;
+function checkForEye(coords, color, board, eyes, notEyeSquares) {
+    for (var _i = 0, eyes_1 = eyes; _i < eyes_1.length; _i++) {
+        var eye = eyes_1[_i];
+        if (includesCoord(eye, coords))
+            return;
+    }
+    if (includesCoord(notEyeSquares, coords))
+        return;
+    var newEye = [{ x: coords.x, y: coords.y }];
+    for (var _a = 0, newEye_1 = newEye; _a < newEye_1.length; _a++) {
+        var eyeSquare = newEye_1[_a];
+        var adjacent = getAdjacent(eyeSquare);
+        for (var _b = 0, adjacent_1 = adjacent; _b < adjacent_1.length; _b++) {
+            var a = adjacent_1[_b];
+            if (board[a.x][a.y] !== color && !includesCoord(newEye, a))
+                newEye.push(a);
+        }
+        if (newEye.length > 25) {
+            notEyeSquares.push.apply(notEyeSquares, newEye);
+            return;
+        }
+    }
+    eyes.push(newEye);
+}
+function getSafeStones(coords, color, board) {
+    var safeStones = [];
+    var notEyeSquares = [];
+    var eyes = [];
+    var adjacent = [];
+    var x = coords.x;
+    var y = coords.y;
+    if (x >= 0 && x < 19 && y >= 0 && y < 19 && board[x][y] === color)
+        safeStones[0] = { x: x, y: y };
+    for (var _i = 0, safeStones_1 = safeStones; _i < safeStones_1.length; _i++) {
+        var safeStone = safeStones_1[_i];
+        adjacent = getAdjacent(safeStone, true);
+        for (var _a = 0, adjacent_2 = adjacent; _a < adjacent_2.length; _a++) {
+            var a = adjacent_2[_a];
+            if (board[a.x][a.y] === color &&
+                !(board[safeStone.x][a.y] === 3 - color && board[a.x][safeStone.y] === 3 - color) &&
+                !includesCoord(safeStones, a)) {
+                safeStones.push(a);
+            }
+            if (board[a.x][a.y] !== color && (a.x === safeStone.x || a.y === safeStone.y)) {
+                checkForEye(a, color, board, eyes, notEyeSquares);
+            }
+        }
+    }
+    return { safeStones: safeStones, eyes: eyes };
+}
+function setSurroundedSafeStones(scoreBoard, coords) {
+    var checkedStones = [{ x: coords.x, y: coords.y }];
+    var color = -1;
+    for (var _i = 0, checkedStones_1 = checkedStones; _i < checkedStones_1.length; _i++) {
+        var stone = checkedStones_1[_i];
+        var adj = getAdjacent(stone);
+        for (var _a = 0, adj_3 = adj; _a < adj_3.length; _a++) {
+            var a = adj_3[_a];
+            var aColor = scoreBoard[a.x][a.y];
+            if (aColor === -1 && !includesCoord(checkedStones, a))
+                checkedStones.push(a);
+            if (aColor > 0 && color === -1)
+                color = aColor;
+            else if (color > 0 && aColor > 0 && aColor !== color)
+                color = 0;
+        }
+    }
+    if (color === -1)
+        color = 0;
+    for (var _b = 0, checkedStones_2 = checkedStones; _b < checkedStones_2.length; _b++) {
+        var stone = checkedStones_2[_b];
+        scoreBoard[stone.x][stone.y] = color;
+    }
+}
 function getScoreBoard(board) {
     var scoreBoard = getEmptyBoard(-1);
     var safeGroups = [];
-    //Get safe groups
+    // Get safe groups
     for (var x = 0; x < 19; x++) {
         for (var y = 0; y < 19; y++) {
-            if (board[x][y] != 0 && scoreBoard[x][y] == -1) {
+            if (board[x][y] !== 0 && scoreBoard[x][y] === -1) {
                 var safeGroup = getSafeStones({ x: x, y: y }, board[x][y], board);
                 if (safeGroup.eyes.length > 1)
                     safeGroups.push(safeGroup);
@@ -5547,7 +5680,7 @@ function getScoreBoard(board) {
         }
     }
     scoreBoard = getEmptyBoard(-1);
-    //Remove eyes with safegroups in them
+    // Remove eyes with safegroups in them
     for (var _b = 0, safeGroups_1 = safeGroups; _b < safeGroups_1.length; _b++) {
         var safeGroup = safeGroups_1[_b];
         for (var i = safeGroup.eyes.length - 1; i >= 0; i--) {
@@ -5572,7 +5705,7 @@ function getScoreBoard(board) {
                 safeGroup.eyes.slice(i, 1);
         }
     }
-    //Set safe scoreBoard squares
+    // Set safe scoreBoard squares
     for (var _f = 0, safeGroups_3 = safeGroups; _f < safeGroups_3.length; _f++) {
         var safeGroup = safeGroups_3[_f];
         if (safeGroup.eyes.length > 1) {
@@ -5583,10 +5716,10 @@ function getScoreBoard(board) {
             }
         }
     }
-    //Set squares surrounded by safe squares to also be safe
+    // Set squares surrounded by safe squares to also be safe
     for (var x = 0; x < 19; x++) {
         for (var y = 0; y < 19; y++) {
-            if (scoreBoard[x][y] == -1) {
+            if (scoreBoard[x][y] === -1) {
                 setSurroundedSafeStones(scoreBoard, { x: x, y: y });
             }
         }
@@ -5594,130 +5727,6 @@ function getScoreBoard(board) {
     return scoreBoard;
 }
 exports.getScoreBoard = getScoreBoard;
-function getSafeStones(coords, color, board) {
-    var safeStones = [];
-    var notEyeSquares = [];
-    var eyes = [];
-    var adjacent = [];
-    var x = coords.x;
-    var y = coords.y;
-    if (x >= 0 && x < 19 && y >= 0 && y < 19 && board[x][y] === color)
-        safeStones[0] = { x: x, y: y };
-    for (var _i = 0, safeStones_1 = safeStones; _i < safeStones_1.length; _i++) {
-        var safeStone = safeStones_1[_i];
-        adjacent = getAdjacent(safeStone, true);
-        for (var _a = 0, adjacent_1 = adjacent; _a < adjacent_1.length; _a++) {
-            var a = adjacent_1[_a];
-            if (board[a.x][a.y] === color &&
-                !(board[safeStone.x][a.y] === 3 - color && board[a.x][safeStone.y] === 3 - color) &&
-                !includesCoord(safeStones, a))
-                safeStones.push(a);
-            if (board[a.x][a.y] !== color && (a.x === safeStone.x || a.y === safeStone.y))
-                checkForEye(a, color, board, eyes, notEyeSquares);
-        }
-    }
-    return { safeStones: safeStones, eyes: eyes };
-}
-function setSurroundedSafeStones(scoreBoard, coords) {
-    var checkedStones = [{ x: coords.x, y: coords.y }];
-    var color = -1;
-    for (var _i = 0, checkedStones_1 = checkedStones; _i < checkedStones_1.length; _i++) {
-        var stone = checkedStones_1[_i];
-        var adj = getAdjacent(stone);
-        for (var _a = 0, adj_1 = adj; _a < adj_1.length; _a++) {
-            var a = adj_1[_a];
-            var aColor = scoreBoard[a.x][a.y];
-            if (aColor === -1 && !includesCoord(checkedStones, a))
-                checkedStones.push(a);
-            if (aColor > 0 && color === -1)
-                color = aColor;
-            else if (color > 0 && aColor > 0 && aColor !== color)
-                color = 0;
-        }
-    }
-    if (color === -1)
-        color = 0;
-    for (var _b = 0, checkedStones_2 = checkedStones; _b < checkedStones_2.length; _b++) {
-        var stone = checkedStones_2[_b];
-        scoreBoard[stone.x][stone.y] = color;
-    }
-}
-function checkForEye(coords, color, board, eyes, notEyeSquares) {
-    for (var _i = 0, eyes_1 = eyes; _i < eyes_1.length; _i++) {
-        var eye = eyes_1[_i];
-        if (includesCoord(eye, coords))
-            return;
-    }
-    if (includesCoord(notEyeSquares, coords))
-        return;
-    var newEye = [{ x: coords.x, y: coords.y }];
-    for (var _a = 0, newEye_1 = newEye; _a < newEye_1.length; _a++) {
-        var eyeSquare = newEye_1[_a];
-        var adjacent = getAdjacent(eyeSquare);
-        for (var _b = 0, adjacent_2 = adjacent; _b < adjacent_2.length; _b++) {
-            var a = adjacent_2[_b];
-            if (board[a.x][a.y] !== color && !includesCoord(newEye, a))
-                newEye.push(a);
-        }
-        if (newEye.length > 25) {
-            notEyeSquares.push.apply(notEyeSquares, newEye);
-            return;
-        }
-    }
-    eyes.push(newEye);
-}
-function getSurroundedStones(board, coords, color) {
-    var capStones = [{ x: coords.x, y: coords.y }];
-    if (board[coords.x][coords.y] !== color)
-        return [];
-    for (var _i = 0, capStones_1 = capStones; _i < capStones_1.length; _i++) {
-        var stone = capStones_1[_i];
-        var adj = getAdjacent(stone);
-        for (var _a = 0, adj_2 = adj; _a < adj_2.length; _a++) {
-            var a = adj_2[_a];
-            if (board[a.x][a.y] === 0)
-                return [];
-            if (board[a.x][a.y] === color && !includesCoord(capStones, a))
-                capStones.push(a);
-        }
-    }
-    return capStones;
-}
-function getAdjacent(coords, diagonal) {
-    if (diagonal === void 0) { diagonal = false; }
-    var a = [];
-    for (var dx = -1; dx < 2; dx++) {
-        for (var dy = -1; dy < 2; dy++) {
-            if (coords.x + dx >= 0 &&
-                coords.x + dx <= 18 &&
-                coords.y + dy >= 0 &&
-                coords.y + dy <= 18 &&
-                !(dx === 0 && dy === 0) &&
-                (diagonal || dx === 0 || dy === 0))
-                a.push({ x: coords.x + dx, y: coords.y + dy });
-        }
-    }
-    return a;
-}
-function captureStones(board, coords, color) {
-    var adj = getAdjacent(coords);
-    for (var _i = 0, adj_3 = adj; _i < adj_3.length; _i++) {
-        var a = adj_3[_i];
-        var surr = getSurroundedStones(board, a, color);
-        for (var _a = 0, surr_1 = surr; _a < surr_1.length; _a++) {
-            var s = surr_1[_a];
-            board[s.x][s.y] = 0;
-        }
-    }
-}
-function includesCoord(coordArray, coord) {
-    for (var _i = 0, coordArray_1 = coordArray; _i < coordArray_1.length; _i++) {
-        var c = coordArray_1[_i];
-        if (c.x === coord.x && c.y === coord.y)
-            return true;
-    }
-    return false;
-}
 
 },{}],44:[function(require,module,exports){
 'use strict'

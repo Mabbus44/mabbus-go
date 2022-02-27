@@ -44,25 +44,6 @@ var bf = require("../common/boardFuncs");
 var lang = require("./lang");
 var socketExtras = {};
 var io;
-function initSockets(server, sessionMiddleware) {
-    io = new socket_io_1.Server(server);
-    io.use(function (socket, next) {
-        sessionMiddleware(socket.request, {}, next);
-    });
-    io.on("connection", socketConnect);
-}
-exports.initSockets = initSockets;
-function socketConnect(socket) {
-    var s = { matchId: 0 };
-    socketExtras[socket.id] = s;
-    console.log("Client connected " + socket.id);
-    socket.on("disconnect", socketDisconnect);
-    socket.on("subscribe to match", subscribeToMatch);
-    socket.on("get moves", getMoves);
-    socket.on("make move", makeMove);
-    socket.on("pass turn", passTurn);
-    socket.on("give up", giveUp);
-}
 function socketDisconnect() {
     var socket = this;
     console.log("Client disconnected " + socket.id);
@@ -82,119 +63,21 @@ function getMoves(matchId, moveId) {
                     if (result === null || result.rowCount === 0)
                         return [2 /*return*/];
                     moves = {};
-                    for (row = 0; row < result.rowCount; row++)
+                    for (row = 0; row < result.rowCount; row++) {
                         moves[row + moveId] = { x: result.rows[row].x, y: result.rows[row].y };
-                    socket.emit("new moves", moves);
+                    }
+                    socket.emit('new moves', moves);
                     return [2 /*return*/];
             }
         });
     });
 }
 function subscribeToMatch(matchId) {
-    if (typeof matchId !== "number" || isNaN(matchId) || matchId <= 0)
+    if (typeof matchId !== 'number' || isNaN(matchId) || matchId <= 0)
         return;
     var socket = this;
-    if (typeof socketExtras[socket.id] === "object")
+    if (typeof socketExtras[socket.id] === 'object')
         socketExtras[socket.id].matchId = matchId;
-}
-function makeMove(matchId, x, y) {
-    return __awaiter(this, void 0, void 0, function () {
-        var socket, userId, userColor;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (typeof x !== "number" || isNaN(x) || x < 0 || x > 18)
-                        return [2 /*return*/];
-                    if (typeof y !== "number" || isNaN(y) || y < 0 || y > 18)
-                        return [2 /*return*/];
-                    socket = this;
-                    userId = uh.getUserId(socket.request.session);
-                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
-                case 1:
-                    userColor = _a.sent();
-                    return [4 /*yield*/, commitMove(matchId, x, y, userColor)];
-                case 2:
-                    if (_a.sent())
-                        sendMessage(socket, lang.translate("Stone added", socket.request.session.language));
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-function passTurn(matchId) {
-    return __awaiter(this, void 0, void 0, function () {
-        var socket, userId, userColor;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    socket = this;
-                    userId = uh.getUserId(socket.request.session);
-                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
-                case 1:
-                    userColor = _a.sent();
-                    return [4 /*yield*/, commitMove(matchId, -1, -1, userColor)];
-                case 2:
-                    if (_a.sent())
-                        sendMessage(socket, lang.translate("Turn passed", socket.request.session.language));
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-function giveUp(matchId) {
-    return __awaiter(this, void 0, void 0, function () {
-        var socket, userId, userColor;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    socket = this;
-                    userId = uh.getUserId(socket.request.session);
-                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
-                case 1:
-                    userColor = _a.sent();
-                    commitMove(matchId, -2, -2, userColor);
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-function commitMove(matchId, x, y, userColor) {
-    return __awaiter(this, void 0, void 0, function () {
-        var result;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    if (typeof matchId !== "number" || isNaN(matchId))
-                        return [2 /*return*/, false];
-                    if (typeof userColor !== "number" || isNaN(userColor) || userColor < 1 || userColor > 2)
-                        return [2 /*return*/, false];
-                    return [4 /*yield*/, db.query('SELECT "x", "y" FROM "moves" WHERE "matchindex" = $1 ORDER BY "moveindex" ASC', [
-                            matchId,
-                        ])];
-                case 1:
-                    result = _a.sent();
-                    if (result === null)
-                        return [2 /*return*/, false];
-                    if (result.rowCount % 2 !== userColor - 1)
-                        return [2 /*return*/, false];
-                    return [4 /*yield*/, db.query('INSERT INTO "moves" ("x", "y", "moveindex", "matchindex") VALUES ($1, $2, $3, $4)', [
-                            x,
-                            y,
-                            result.rowCount + 1,
-                            matchId,
-                        ])];
-                case 2:
-                    _a.sent();
-                    pushMove(matchId, result.rowCount + 1, x, y);
-                    if ((result.rowCount > 0 && result.rows[result.rowCount - 1] === -1 && x === -1) || x === -2) {
-                        endMatch(matchId);
-                    }
-                    else
-                        return [2 /*return*/, true];
-                    return [2 /*return*/];
-            }
-        });
-    });
 }
 function endMatch(matchId) {
     return __awaiter(this, void 0, void 0, function () {
@@ -228,7 +111,7 @@ function endMatch(matchId) {
                         for (_i = 0, _a = Object.entries(socketExtras); _i < _a.length; _i++) {
                             _b = _a[_i], socketId = _b[0], socketExtra = _b[1];
                             if (socketExtra.matchId === matchId)
-                                io.sockets.sockets.get(socketId).emit("match ended", points);
+                                io.sockets.sockets.get(socketId).emit('match ended', points);
                         }
                         return [2 /*return*/];
                     }
@@ -243,7 +126,7 @@ function endMatch(matchId) {
                     for (_c = 0, _d = Object.entries(socketExtras); _c < _d.length; _c++) {
                         _e = _d[_c], socketId = _e[0], socketExtra = _e[1];
                         if (socketExtra.matchId === matchId)
-                            io.sockets.sockets.get(socketId).emit("match ended", points);
+                            io.sockets.sockets.get(socketId).emit('match ended', points);
                     }
                     return [2 /*return*/];
             }
@@ -256,11 +139,128 @@ function pushMove(matchId, moveId, x, y) {
     for (var _i = 0, _a = Object.entries(socketExtras); _i < _a.length; _i++) {
         var _b = _a[_i], socketId = _b[0], socketExtra = _b[1];
         if (socketExtra.matchId === matchId)
-            io.sockets.sockets.get(socketId).emit("new moves", moves);
+            io.sockets.sockets.get(socketId).emit('new moves', moves);
     }
 }
-function sendMessage(socket, message) {
-    console.log("SendMessage:");
-    console.log(message);
-    socket.emit("message", message);
+function commitMove(matchId, x, y, userColor) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (typeof matchId !== 'number' || isNaN(matchId))
+                        return [2 /*return*/, false];
+                    if (typeof userColor !== 'number' || isNaN(userColor) || userColor < 1 || userColor > 2)
+                        return [2 /*return*/, false];
+                    return [4 /*yield*/, db.query('SELECT "x", "y" FROM "moves" WHERE "matchindex" = $1 ORDER BY "moveindex" ASC', [
+                            matchId,
+                        ])];
+                case 1:
+                    result = _a.sent();
+                    if (result === null)
+                        return [2 /*return*/, false];
+                    if (result.rowCount % 2 !== userColor - 1)
+                        return [2 /*return*/, false];
+                    return [4 /*yield*/, db.query('INSERT INTO "moves" ("x", "y", "moveindex", "matchindex") VALUES ($1, $2, $3, $4)', [
+                            x,
+                            y,
+                            result.rowCount + 1,
+                            matchId,
+                        ])];
+                case 2:
+                    _a.sent();
+                    pushMove(matchId, result.rowCount + 1, x, y);
+                    if ((result.rowCount > 0 && result.rows[result.rowCount - 1] === -1 && x === -1) || x === -2)
+                        endMatch(matchId);
+                    return [2 /*return*/, true];
+            }
+        });
+    });
 }
+function sendMessage(socket, message) {
+    console.log('SendMessage:');
+    console.log(message);
+    socket.emit('message', message);
+}
+function makeMove(matchId, x, y) {
+    return __awaiter(this, void 0, void 0, function () {
+        var socket, userId, userColor;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (typeof x !== 'number' || isNaN(x) || x < 0 || x > 18)
+                        return [2 /*return*/];
+                    if (typeof y !== 'number' || isNaN(y) || y < 0 || y > 18)
+                        return [2 /*return*/];
+                    socket = this;
+                    userId = uh.getUserId(socket.request.session);
+                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
+                case 1:
+                    userColor = _a.sent();
+                    return [4 /*yield*/, commitMove(matchId, x, y, userColor)];
+                case 2:
+                    if (_a.sent()) {
+                        sendMessage(socket, lang.translate('Stone added', socket.request.session.language));
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function passTurn(matchId) {
+    return __awaiter(this, void 0, void 0, function () {
+        var socket, userId, userColor;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    socket = this;
+                    userId = uh.getUserId(socket.request.session);
+                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
+                case 1:
+                    userColor = _a.sent();
+                    return [4 /*yield*/, commitMove(matchId, -1, -1, userColor)];
+                case 2:
+                    if (_a.sent()) {
+                        sendMessage(socket, lang.translate('Turn passed', socket.request.session.language));
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function giveUp(matchId) {
+    return __awaiter(this, void 0, void 0, function () {
+        var socket, userId, userColor;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    socket = this;
+                    userId = uh.getUserId(socket.request.session);
+                    return [4 /*yield*/, uh.getUserColor(matchId, userId)];
+                case 1:
+                    userColor = _a.sent();
+                    commitMove(matchId, -2, -2, userColor);
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function socketConnect(socket) {
+    var s = { matchId: 0 };
+    socketExtras[socket.id] = s;
+    console.log("Client connected " + socket.id);
+    socket.on('disconnect', socketDisconnect);
+    socket.on('subscribe to match', subscribeToMatch);
+    socket.on('get moves', getMoves);
+    socket.on('make move', makeMove);
+    socket.on('pass turn', passTurn);
+    socket.on('give up', giveUp);
+}
+function initSockets(server, sessionMiddleware) {
+    io = new socket_io_1.Server(server);
+    io.use(function (socket, next) {
+        sessionMiddleware(socket.request, {}, next);
+    });
+    io.on('connection', socketConnect);
+}
+exports.initSockets = initSockets;

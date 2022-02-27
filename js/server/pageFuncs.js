@@ -36,7 +36,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.acceptChallange = exports.unChallengePlayer = exports.challengePlayer = exports.getCurrentMatches = exports.getChallengeblePlayers = exports.getChallengedPlayers = exports.getChallengers = void 0;
+exports.getMatchHistory = exports.acceptChallange = exports.unChallengePlayer = exports.challengePlayer = exports.getCurrentMatches = exports.getChallengeblePlayers = exports.getChallengedPlayers = exports.getChallengers = void 0;
 var uh = require("./userHandling");
 var db = require("./dbHandling");
 function getChallengers(userId) {
@@ -113,7 +113,7 @@ function getChallengeblePlayers(userId) {
                     console.log(result.rows);
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
-                        if (row.id != userId)
+                        if (row.id !== userId)
                             ret[row.id] = row.username;
                     }
                     return [2 /*return*/, ret];
@@ -135,7 +135,7 @@ function getCurrentMatches(userId) {
                     ids = [];
                     for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
                         row = _a[_i];
-                        if (row.player1id == userId)
+                        if (row.player1id === userId)
                             ids.push(row.player2id);
                         else
                             ids.push(row.player1id);
@@ -144,7 +144,7 @@ function getCurrentMatches(userId) {
                 case 2:
                     usernames = _b.sent();
                     ret = {};
-                    for (i in result.rows)
+                    for (i = 0; i < result.rows.length; i++)
                         ret[result.rows[i].matchindex] = usernames[i];
                     return [2 /*return*/, ret];
             }
@@ -205,22 +205,23 @@ function acceptChallange(userId, challengerId, color) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (userId == null || isNaN(userId) || challengerId == null || isNaN(challengerId) || (color !== 0 && color !== 1))
+                    if (userId == null || isNaN(userId) || challengerId == null || isNaN(challengerId) || (color !== 0 && color !== 1)) {
                         return [2 /*return*/, 0];
+                    }
                     query = 'DELETE FROM "challenges" WHERE "user2id"=$1 AND "user1id"=$2';
                     return [4 /*yield*/, db.query(query, [userId, challengerId])];
                 case 1:
                     result = _a.sent();
                     if (result === null || result.rowCount === 0)
                         return [2 /*return*/, 0];
-                    if (color == 0)
+                    if (color === 0)
                         query = 'INSERT INTO "matchlist" ("player1id", "player2id") VALUES ($1, $2) RETURNING "matchindex";';
                     else
                         query = 'INSERT INTO "matchlist" ("player1id", "player2id") VALUES ($2, $1) RETURNING "matchindex";';
                     return [4 /*yield*/, db.query(query, [userId, challengerId])];
                 case 2:
                     result = _a.sent();
-                    if (result === null || result.rowCount != 1)
+                    if (result === null || result.rowCount !== 1)
                         return [2 /*return*/, 0];
                     return [2 /*return*/, result.rows[0].matchindex];
             }
@@ -228,3 +229,36 @@ function acceptChallange(userId, challengerId, color) {
     });
 }
 exports.acceptChallange = acceptChallange;
+function getMatchHistory(userId) {
+    return __awaiter(this, void 0, void 0, function () {
+        var result, matches, _i, _a, row;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0: return [4 /*yield*/, db.query('SELECT m.player1id, m.player2id, m.matchindex, c1.username as name1, c2.username as name2, m.winner, m.endcause, m.points1, m.points2 FROM matchlist m INNER JOIN credentials c1 on c1.id = m.player1id INNER JOIN credentials c2 on c2.id = m.player2id WHERE m.player1id = $1 OR m.player2id = $1 AND "endcause" is null', [userId])];
+                case 1:
+                    result = _b.sent();
+                    console.log(result);
+                    if (result === null)
+                        return [2 /*return*/, []];
+                    matches = [];
+                    for (_i = 0, _a = result.rows; _i < _a.length; _i++) {
+                        row = _a[_i];
+                        matches.push({
+                            player1id: row.player1id,
+                            player2id: row.player2id,
+                            winner: row.winner,
+                            matchindex: row.matchindex,
+                            name1: row.name1,
+                            name2: row.name2,
+                            endCause: row.endcause,
+                            points1: row.points1,
+                            points2: row.points2,
+                        });
+                    }
+                    console.log(matches);
+                    return [2 /*return*/, matches];
+            }
+        });
+    });
+}
+exports.getMatchHistory = getMatchHistory;

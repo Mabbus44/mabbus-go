@@ -55,6 +55,7 @@ async function httpGet(req, res) {
       break;
     }
     case '/profile':
+      pageFuncs.getMatchHistory(req.session.userId);
       await render('pages/profile', req, res);
       break;
     case '/register':

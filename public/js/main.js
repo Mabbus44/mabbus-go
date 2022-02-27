@@ -3,21 +3,21 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.btnGoToGame = exports.setSelect2 = exports.setSelect = void 0;
 function setSelect(val) {
-    var list1 = document.getElementById("challengerName");
-    var list2 = document.getElementById("challengerID");
+    var list1 = document.getElementById('challengerName');
+    var list2 = document.getElementById('challengerID');
     list1.selectedIndex = val;
     list2.selectedIndex = val;
 }
 exports.setSelect = setSelect;
 function setSelect2(val) {
-    var list1 = document.getElementById("oponentName");
-    var list2 = document.getElementById("matchId");
+    var list1 = document.getElementById('oponentName');
+    var list2 = document.getElementById('matchId');
     list1.selectedIndex = val;
     list2.selectedIndex = val;
 }
 exports.setSelect2 = setSelect2;
 function btnGoToGame() {
-    var list = document.getElementById("matchId");
+    var list = document.getElementById('matchId');
     var listVal = +list.value;
     if (listVal == null || isNaN(listVal))
         return;
